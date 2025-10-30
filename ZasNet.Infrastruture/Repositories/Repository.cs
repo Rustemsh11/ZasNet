@@ -1,0 +1,46 @@
+﻿using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
+using ZasNet.Application.Repository;
+using ZasNet.Domain.Entities;
+using ZasNet.Infrastruture.Persistence;
+
+namespace ZasNet.Infrastruture.Repositories;
+
+public class Repository<T>(
+    ZasNetDbContext zasNetDbContext) : IRepository<T> where T : BaseItem
+{
+    public void Create(T entity)
+    {
+        zasNetDbContext.Set<T>().Add(entity);
+    }
+
+    public void Delete(T entity)
+    {
+        zasNetDbContext.Set<T>().Remove(entity);
+    }
+
+    public IQueryable<T> FindAll(bool trackChanges)
+    {
+        if (trackChanges) 
+        {
+            return zasNetDbContext.Set<T>();
+        }
+
+        return zasNetDbContext.Set<T>().AsNoTracking();
+    }
+
+    public IQueryable<T> FindByCondition(Expression<Func<T, bool>> expression, bool trackChanges)
+    {
+        if (trackChanges)
+        {
+            return zasNetDbContext.Set<T>().Where(expression);
+        }
+
+        return zasNetDbContext.Set<T>().Where(expression).AsNoTracking();
+    }
+
+    public void Update(T entity)
+    {
+        zasNetDbContext.Set<T>().Update(entity);
+    }
+}
