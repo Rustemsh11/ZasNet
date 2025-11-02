@@ -9,7 +9,10 @@ public class GetOrdersHandler(IRepositoryManager repositoryManager, IMapper mapp
 {
     public async Task<List<GetOrdersResponse>> Handle(GetOrdersRequest request, CancellationToken cancellationToken)
     {
-        var orders = await repositoryManager.OrderRepository.FindAll(false).ToListAsync(cancellationToken);
+        var orders = await repositoryManager.OrderRepository.FindAll(false)
+            .Include(c=>c.OrderEmployees).ThenInclude(c=>c.Employee)
+            .Include(c=>c.OrderServices).ThenInclude(c=>c.Service)
+            .ToListAsync(cancellationToken);
 
         return mapper.Map<List<GetOrdersResponse>>(orders);
     }

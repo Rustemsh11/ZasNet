@@ -8,10 +8,10 @@ namespace ZasNet.WebApi.Controllers;
 
 [Route("api/v1/[controller]/[action]")]
 [ApiController]
+[Authorize]
 public class OrderController(IMediator mediator): ControllerBase
 {
     [HttpGet]
-    [Authorize]
     public async Task GetOrders([FromQuery]GetOrdersRequest getOrdersRequest, CancellationToken cancellationToken)
     {
         await mediator.Send(getOrdersRequest, cancellationToken);
