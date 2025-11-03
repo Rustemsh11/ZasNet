@@ -12,6 +12,7 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
     {
         var paymentTypeConverter = new EnumToNumberConverter<PaymentType, short>();
         var statusConverter = new EnumToNumberConverter<OrderStatus, short>();
+        var clientType = new EnumToNumberConverter<ClientType, short>();
         builder.ToTable("Orders");
         builder.Property(c => c.Client).IsRequired().HasMaxLength(200);
         builder.Property(c => c.Date).IsRequired();
@@ -21,6 +22,7 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(c => c.OrderPriceAmount).IsRequired();
         builder.Property(c => c.PaymentType).HasConversion(paymentTypeConverter).IsRequired();
         builder.Property(c => c.Status).HasConversion(statusConverter).IsRequired();
+        builder.Property(c => c.ClientType).HasConversion(clientType).IsRequired();
         builder.Property(c => c.CreatedDate).IsRequired().HasDefaultValueSql("GETDATE()");
     }
 }

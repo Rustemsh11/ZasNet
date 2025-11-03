@@ -19,6 +19,8 @@ public class CreateOrderCommand: IRequest<Unit>
     public decimal OrderPriceAmount { get; set; }
 
     public PaymentType PaymentType { get; set; }
+    
+    public ClientType ClientType { get; set; }
 
     public string? Description { get; set; }
 

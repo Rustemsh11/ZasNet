@@ -40,7 +40,8 @@ public class CreateOrderHandler(IRepositoryManager repositoryManager) : IRequest
             Description = request.Description,
             OrderCars = orderCars,
             OrderEmployees = orderEmployees,
-            OrderServices = orderServices
+            OrderServices = orderServices,
+            ClientType = request.ClientType,
         });
         
         repositoryManager.OrderRepository.Create(order);

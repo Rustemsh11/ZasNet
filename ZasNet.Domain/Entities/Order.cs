@@ -26,6 +26,8 @@ public class Order : LockedItemBase
 
     public DateTime? ClosedDate { get; private set;}
 
+    public ClientType? ClientType { get; private set;}
+
 
     public ICollection<OrderService> OrderServices { get; set; }
 
@@ -53,6 +55,8 @@ public class Order : LockedItemBase
 
         public string? Description { get; set; }
 
+        public ClientType? ClientType { get; set; }
+
         public List<OrderService> OrderServices { get; set; }
 
         public List<OrderCar> OrderCars { get; set; }
@@ -77,6 +81,7 @@ public class Order : LockedItemBase
             OrderServices = orderDto.OrderServices,
             OrderCars = orderDto.OrderCars,
             OrderEmployees = orderDto.OrderEmployees,
+            ClientType = orderDto.ClientType,
         };
     }
 }

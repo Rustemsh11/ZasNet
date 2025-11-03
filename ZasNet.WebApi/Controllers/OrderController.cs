@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ZasNet.Application.UseCases.Commands.Orders.CreateOrder;
+using ZasNet.Application.UseCases.Queries.Orders.GetCreateOrderParameters;
 using ZasNet.Application.UseCases.Queries.Orders.GetOrders;
 
 namespace ZasNet.WebApi.Controllers;
@@ -12,13 +13,19 @@ namespace ZasNet.WebApi.Controllers;
 public class OrderController(IMediator mediator): ControllerBase
 {
     [HttpGet]
-    public async Task GetOrders([FromQuery]GetOrdersRequest getOrdersRequest, CancellationToken cancellationToken)
+    public async Task<List<GetOrdersResponse>> GetOrders([FromQuery]GetOrdersRequest getOrdersRequest, CancellationToken cancellationToken)
     {
-        await mediator.Send(getOrdersRequest, cancellationToken);
+        return await mediator.Send(getOrdersRequest, cancellationToken);
+    }
+    
+    [HttpGet]
+    public async Task<CreateOrderParameters> GetCreateOrderParametSers([FromQuery]GetCreateOrderParametersRequest getCreateOrderParameters, CancellationToken cancellationToken)
+    {
+        return await mediator.Send(getCreateOrderParameters, cancellationToken);
     }
     
     [HttpPost]
-    public async Task CreateOrderCommand([FromBody] CreateOrderCommand createOrderCommand, CancellationToken token)
+    public async Task CreateOrder([FromBody] CreateOrderCommand createOrderCommand, CancellationToken token)
     {
         await mediator.Send(createOrderCommand, token);
     }
