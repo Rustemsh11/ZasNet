@@ -2,5 +2,5 @@
 
 public interface IJwtTokenGenerator
 {
-    (DateTime Expires, string Token) Generate(string login, string roleName);
+    (DateTime Expires, string Token) Generate(int userId, string login, string roleName);
 }

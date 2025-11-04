@@ -24,6 +24,8 @@ public class CreateOrderCommand: IRequest<Unit>
 
     public string? Description { get; set; }
 
+    public int CreatedUserId { get; set; }
+
     public List<int> OrderEmployeeIds { get; set; }
 
     public List<int> OrderCarIds { get; set; }

@@ -7,5 +7,6 @@ public class Employee : LockedItemBase
     public string? Phone { get; set; }
 
     public ICollection<OrderEmployee> OrderEmployees { get; set; }
+    public ICollection<Order> CreatedByEmployeeOrder { get; set; }
 
 }

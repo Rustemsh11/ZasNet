@@ -19,7 +19,7 @@ public class GetAuthTokenHandler(IRepositoryManager repositoryManager,
             throw new InvalidOperationException("Пароль не верный. Попробуйте еще раз");
         }
 
-        var (expires, token) = jwtTokenGenerator.Generate(user.Login, user.Role.Name);
+        var (expires, token) = jwtTokenGenerator.Generate(user.Id, user.Login, user.Role.Name);
 
         return new AccessTokenDto() { Token = token, ExpiredTime = expires };
     }

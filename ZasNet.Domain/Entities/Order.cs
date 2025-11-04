@@ -28,6 +28,7 @@ public class Order : LockedItemBase
 
     public ClientType? ClientType { get; private set;}
 
+    public int CreatedEmployeeId { get; set; }
 
     public ICollection<OrderService> OrderServices { get; set; }
 
@@ -36,6 +37,8 @@ public class Order : LockedItemBase
     public ICollection<OrderEmployee> OrderEmployees { get; set; }
 
     public ICollection<Document> OrderDocuments { get; set; }
+
+    public Employee CreatedEmployee { get; set; }
 
     public class OrderDto
     {
@@ -54,6 +57,8 @@ public class Order : LockedItemBase
         public PaymentType PaymentType { get; set; }
 
         public string? Description { get; set; }
+
+        public int CreatedEmployeeId { get; set; }
 
         public ClientType? ClientType { get; set; }
 
@@ -82,6 +87,7 @@ public class Order : LockedItemBase
             OrderCars = orderDto.OrderCars,
             OrderEmployees = orderDto.OrderEmployees,
             ClientType = orderDto.ClientType,
+            CreatedEmployeeId = orderDto.CreatedEmployeeId,
         };
     }
 }

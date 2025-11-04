@@ -42,6 +42,7 @@ public class CreateOrderHandler(IRepositoryManager repositoryManager) : IRequest
             OrderEmployees = orderEmployees,
             OrderServices = orderServices,
             ClientType = request.ClientType,
+            CreatedEmployeeId = request.CreatedUserId,
         });
         
         repositoryManager.OrderRepository.Create(order);

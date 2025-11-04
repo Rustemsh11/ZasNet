@@ -24,5 +24,7 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(c => c.Status).HasConversion(statusConverter).IsRequired();
         builder.Property(c => c.ClientType).HasConversion(clientType).IsRequired();
         builder.Property(c => c.CreatedDate).IsRequired().HasDefaultValueSql("GETDATE()");
+        builder.Property(c => c.CreatedEmployeeId).HasDefaultValue(1);
+        builder.HasOne(c=>c.CreatedEmployee).WithMany(c=>c.CreatedByEmployeeOrder).HasForeignKey(c => c.CreatedEmployeeId);
     }
 }
