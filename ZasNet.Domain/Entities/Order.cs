@@ -40,7 +40,7 @@ public class Order : LockedItemBase
 
     public Employee CreatedEmployee { get; set; }
 
-    public class OrderDto
+    public class CreateOrderDto
     {
         public string Client { get; set; }
 
@@ -69,7 +69,7 @@ public class Order : LockedItemBase
         public List<OrderEmployee> OrderEmployees { get; set; }
     }
     
-    public static Order Create(OrderDto orderDto)
+    public static Order Create(CreateOrderDto orderDto)
     {
         return new Order()
         {

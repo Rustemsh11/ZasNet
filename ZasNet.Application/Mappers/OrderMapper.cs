@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using ZasNet.Application.CommonDtos;
 using ZasNet.Application.UseCases.Queries.Orders.GetOrders;
 using ZasNet.Domain.Entities;
 
@@ -8,17 +9,13 @@ public class OrderMapper: Profile
 {
     public OrderMapper()
     {
-        CreateMap<Order, GetOrdersResponse>()
-            .ForMember(c => c.Address, (c) => c.MapFrom(src => $"{src.AddressCity}, {src.AddressStreet} {src.AddressNumber}"))
-            .ForMember(c => c.Employee, c => c.MapFrom(src => 
-                src.OrderEmployees != null && src.OrderEmployees.Any() 
-                    ? (src.OrderEmployees.First().Employee != null ? src.OrderEmployees.First().Employee.Name : string.Empty)
-                    : string.Empty))
-            .ForMember(c => c.ServiceNames, c => c.MapFrom(src => src.OrderServices != null && src.OrderServices.Any()
-                ? src.OrderServices
-                    .Where(os => os.Service != null)
-                    .Select(os => os.Service.Name)
-                    .ToList()
-                : new List<string>()));
+        CreateMap<Order, GetOrdersResponse>();
+        CreateMap<Order, OrderDto>()
+            .ForMember(c => c.OrderEmployeeDtos, c => c.MapFrom(src =>
+                    src.OrderEmployees.Select(c => new EmployeeDto() { Id = c.EmployeeId, Name = c.Employee.Name })))
+            .ForMember(c => c.OrderCarDtos, c => c.MapFrom(src =>
+                    src.OrderCars.Select(c => new CarDto() { Id = c.CarId, Name = $"{c.Car.CarModel.Name} ({c.Car.Number})" })))
+        .ForMember(c => c.OrderServicesDtos, c => c.MapFrom(src =>
+                    src.OrderServices.Select(c => new OrderServiceDto(c.ServiceId, c.Price, c.TotalVolume))));
     }
 }

@@ -10,12 +10,6 @@ public class GetOrdersResponse
 
     public DateTime Date { get; set; }
 
-    public string Address { get; set; }
-
-    public string Employee {  get; set; }
-
     public OrderStatus Status { get; set; }
-
-    public List<string> ServiceNames {  get; set; }
 
 }

@@ -5,11 +5,11 @@ using static ZasNet.Domain.Entities.Order;
 
 namespace ZasNet.Application.UseCases.Commands.Orders.CreateOrder;
 
-public class CreateOrderHandler(IRepositoryManager repositoryManager) : IRequestHandler<CreateOrderCommand, Unit>
+public class CreateOrderHandler(IRepositoryManager repositoryManager) : IRequestHandler<CreateOrderCommand>
 {
-    public async Task<Unit> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
+    public async Task Handle(CreateOrderCommand request, CancellationToken cancellationToken)
     {
-        var orderServices = request.OrderServicesDto.Select(c => new OrderService()
+        var orderServices = request.orderDto.OrderServicesDtos.Select(c => new OrderService()
         {
             ServiceId = c.ServiceId,
             Price = c.Price,
@@ -17,38 +17,36 @@ public class CreateOrderHandler(IRepositoryManager repositoryManager) : IRequest
             PriceTotal = c.Price * (decimal)c.TotalVolume
         }).ToList();
 
-        var orderEmployees = request.OrderEmployeeIds.Select(c => new OrderEmployee()
+        var orderEmployees = request.orderDto.OrderEmployeeDtos.Select(c => new OrderEmployee()
         {
-            EmployeeId = c
+            EmployeeId = c.Id
         }).ToList();
         
-        var orderCars = request.OrderCarIds.Select(c => new OrderCar()
+        var orderCars = request.orderDto.OrderCarDtos.Select(c => new OrderCar()
         {
-            CarId = c
+            CarId = c.Id
         }).ToList();
 
 
-        var order = Order.Create(new OrderDto()
+        var order = Order.Create(new CreateOrderDto()
         {
-            Client = request.Client,
-            Date = request.Date,
-            AddressCity = request.AddressCity,
-            AddressStreet = request.AddressStreet,
-            AddressNumber = request.AddressNumber,
-            OrderPriceAmount = request.OrderPriceAmount,
-            PaymentType = request.PaymentType,
-            Description = request.Description,
+            Client = request.orderDto.Client,
+            Date = request.orderDto.Date,
+            AddressCity = request.orderDto.AddressCity,
+            AddressStreet = request.orderDto.AddressStreet,
+            AddressNumber = request.orderDto.AddressNumber,
+            OrderPriceAmount = request.orderDto.OrderPriceAmount,
+            PaymentType = request.orderDto.PaymentType,
+            Description = request.orderDto.Description,
             OrderCars = orderCars,
             OrderEmployees = orderEmployees,
             OrderServices = orderServices,
-            ClientType = request.ClientType,
-            CreatedEmployeeId = request.CreatedUserId,
+            ClientType = request.orderDto.ClientType,
+            CreatedEmployeeId = request.orderDto.CreatedUserId,
         });
         
         repositoryManager.OrderRepository.Create(order);
 
         await repositoryManager.SaveAsync(cancellationToken);
-
-        return Unit.Value;
     }
 }
