@@ -4,6 +4,8 @@ namespace ZasNet.Application.CommonDtos;
 
 public class OrderDto
 {
+    public int Id { get; set; }
+
     public string Client { get; set; }
 
     public DateTime Date { get; set; }
@@ -24,7 +26,7 @@ public class OrderDto
 
     public string? Description { get; set; }
 
-    public int CreatedUserId { get; set; }
+    public EmployeeDto CreatedUser { get; set; }
 
     public List<EmployeeDto> OrderEmployeeDtos { get; set; }
 

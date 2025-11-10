@@ -12,6 +12,7 @@ public class GetOrderHandler(IRepositoryManager repositoryManager,
     public async Task<OrderDto> Handle(GetOrderRequest request, CancellationToken cancellationToken)
     {
         var order = await repositoryManager.OrderRepository.FindByCondition(c => c.Id == request.orderId, false)
+            .Include(c=>c.CreatedEmployee)
             .Include(c=>c.OrderCars).ThenInclude(c=>c.Car).ThenInclude(c=>c.CarModel)
             .Include(c=>c.OrderEmployees).ThenInclude(c=>c.Employee)
             .Include(c=>c.OrderServices)

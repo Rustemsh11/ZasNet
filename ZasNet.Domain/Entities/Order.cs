@@ -40,7 +40,7 @@ public class Order : LockedItemBase
 
     public Employee CreatedEmployee { get; set; }
 
-    public class CreateOrderDto
+    public class UpsertOrderDto
     {
         public string Client { get; set; }
 
@@ -69,7 +69,7 @@ public class Order : LockedItemBase
         public List<OrderEmployee> OrderEmployees { get; set; }
     }
     
-    public static Order Create(CreateOrderDto orderDto)
+    public static Order Create(UpsertOrderDto orderDto)
     {
         return new Order()
         {
@@ -89,5 +89,29 @@ public class Order : LockedItemBase
             ClientType = orderDto.ClientType,
             CreatedEmployeeId = orderDto.CreatedEmployeeId,
         };
+    }
+
+    public void Update(UpsertOrderDto orderDto) 
+    {
+        if(Status == OrderStatus.CreatedInvoice)
+        {
+            throw new InvalidOperationException("Нельзя изменять заявку со статусом: Создан счет");
+        }
+
+        Client = orderDto.Client;
+        Date = orderDto.Date;
+        AddressCity = orderDto.AddressCity;
+        AddressStreet = orderDto.AddressStreet;
+        AddressNumber = orderDto.AddressNumber;
+        OrderPriceAmount = orderDto.OrderPriceAmount;
+        PaymentType = orderDto.PaymentType;
+        Description = orderDto.Description;
+        Status = OrderStatus.Created;
+        CreatedDate = DateTime.Now;
+        OrderServices = orderDto.OrderServices;
+        OrderCars = orderDto.OrderCars;
+        OrderEmployees = orderDto.OrderEmployees;
+        ClientType = orderDto.ClientType;
+        CreatedEmployeeId = orderDto.CreatedEmployeeId;
     }
 }

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ZasNet.Application.CommonDtos;
 using ZasNet.Application.UseCases.Commands.Orders.CreateOrder;
+using ZasNet.Application.UseCases.Commands.Orders.SaveOrder;
 using ZasNet.Application.UseCases.Queries.Orders.GetCreateOrderParameters;
 using ZasNet.Application.UseCases.Queries.Orders.GetOrder;
 using ZasNet.Application.UseCases.Queries.Orders.GetOrders;
@@ -36,5 +37,11 @@ public class OrderController(IMediator mediator): ControllerBase
     public async Task CreateOrder([FromBody] CreateOrderCommand createOrderCommand, CancellationToken token)
     {
         await mediator.Send(createOrderCommand, token);
+    }
+    
+    [HttpPost]
+    public async Task SaveOrder([FromBody] SaveOrderCommand saveOrderCommand, CancellationToken token)
+    {
+        await mediator.Send(saveOrderCommand, token);
     }
 }

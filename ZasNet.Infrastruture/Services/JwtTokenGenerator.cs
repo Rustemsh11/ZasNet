@@ -3,20 +3,21 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using ZasNet.Application.CommonDtos;
 using ZasNet.Application.Services;
 
 namespace ZasNet.Infrastruture.Services;
 
 public class JwtTokenGenerator(IOptions<AuthSettings> authSettings) : IJwtTokenGenerator
 {
-    public (DateTime Expires, string Token) Generate(int userId, string login, string roleName)
+    public (DateTime Expires, string Token) Generate(EmployeeDto userId, string login, string roleName)
     {
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authSettings.Value.secretKey));
         var signinCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
         var claimsList = new List<Claim>()
                         {
-                            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+                            new Claim(ClaimTypes.NameIdentifier, userId.Id.ToString()),
                             new Claim(ClaimTypes.Name, login),
                             new Claim(ClaimTypes.Role, roleName)
                         };

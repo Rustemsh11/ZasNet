@@ -3,4 +3,4 @@ using ZasNet.Application.CommonDtos;
 
 namespace ZasNet.Application.UseCases.Commands.Orders.CreateOrder;
 
-public record CreateOrderCommand(OrderDto orderDto): IRequest;
+public record CreateOrderCommand(OrderDto OrderDto): IRequest;

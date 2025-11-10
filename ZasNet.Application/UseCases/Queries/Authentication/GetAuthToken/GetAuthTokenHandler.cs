@@ -1,5 +1,7 @@
-﻿using MediatR;
+﻿using AutoMapper;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
+using ZasNet.Application.CommonDtos;
 using ZasNet.Application.Repository;
 using ZasNet.Application.Services;
 
@@ -18,9 +20,9 @@ public class GetAuthTokenHandler(IRepositoryManager repositoryManager,
         {
             throw new InvalidOperationException("Пароль не верный. Попробуйте еще раз");
         }
+        var employeeDto = new EmployeeDto() { Id = user.Id, Name = await repositoryManager.EmployeeRepository.FindByCondition(c => c.Id == user.Id, false).Select(c => c.Name).SingleAsync(cancellationToken) };
+        var (expires, token) = jwtTokenGenerator.Generate(employeeDto, user.Login, user.Role.Name);
 
-        var (expires, token) = jwtTokenGenerator.Generate(user.Id, user.Login, user.Role.Name);
-
-        return new AccessTokenDto() { Token = token, ExpiredTime = expires };
+        return new AccessTokenDto() { Token = token, ExpiredTime = expires, User = employeeDto };
     }
 }

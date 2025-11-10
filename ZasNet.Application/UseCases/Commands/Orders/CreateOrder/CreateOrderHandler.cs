@@ -9,7 +9,7 @@ public class CreateOrderHandler(IRepositoryManager repositoryManager) : IRequest
 {
     public async Task Handle(CreateOrderCommand request, CancellationToken cancellationToken)
     {
-        var orderServices = request.orderDto.OrderServicesDtos.Select(c => new OrderService()
+        var orderServices = request.OrderDto.OrderServicesDtos.Select(c => new OrderService()
         {
             ServiceId = c.ServiceId,
             Price = c.Price,
@@ -17,32 +17,32 @@ public class CreateOrderHandler(IRepositoryManager repositoryManager) : IRequest
             PriceTotal = c.Price * (decimal)c.TotalVolume
         }).ToList();
 
-        var orderEmployees = request.orderDto.OrderEmployeeDtos.Select(c => new OrderEmployee()
+        var orderEmployees = request.OrderDto.OrderEmployeeDtos.Select(c => new OrderEmployee()
         {
             EmployeeId = c.Id
         }).ToList();
         
-        var orderCars = request.orderDto.OrderCarDtos.Select(c => new OrderCar()
+        var orderCars = request.OrderDto.OrderCarDtos.Select(c => new OrderCar()
         {
             CarId = c.Id
         }).ToList();
 
 
-        var order = Order.Create(new CreateOrderDto()
+        var order = Order.Create(new UpsertOrderDto()
         {
-            Client = request.orderDto.Client,
-            Date = request.orderDto.Date,
-            AddressCity = request.orderDto.AddressCity,
-            AddressStreet = request.orderDto.AddressStreet,
-            AddressNumber = request.orderDto.AddressNumber,
-            OrderPriceAmount = request.orderDto.OrderPriceAmount,
-            PaymentType = request.orderDto.PaymentType,
-            Description = request.orderDto.Description,
+            Client = request.OrderDto.Client,
+            Date = request.OrderDto.Date,
+            AddressCity = request.OrderDto.AddressCity,
+            AddressStreet = request.OrderDto.AddressStreet,
+            AddressNumber = request.OrderDto.AddressNumber,
+            OrderPriceAmount = request.OrderDto.OrderPriceAmount,
+            PaymentType = request.OrderDto.PaymentType,
+            Description = request.OrderDto.Description,
             OrderCars = orderCars,
             OrderEmployees = orderEmployees,
             OrderServices = orderServices,
-            ClientType = request.orderDto.ClientType,
-            CreatedEmployeeId = request.orderDto.CreatedUserId,
+            ClientType = request.OrderDto.ClientType,
+            CreatedEmployeeId = request.OrderDto.CreatedUser.Id,
         });
         
         repositoryManager.OrderRepository.Create(order);
