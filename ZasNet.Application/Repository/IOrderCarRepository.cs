@@ -2,6 +2,6 @@
 
 namespace ZasNet.Application.Repository;
 
-public interface IOrderCarRepository : IRepository<OrderCar>
+public interface IOrderCarRepository : IRepository<OrderServiceCar>
 {
 }

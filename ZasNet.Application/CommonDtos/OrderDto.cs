@@ -28,9 +28,5 @@ public class OrderDto
 
     public EmployeeDto CreatedUser { get; set; }
 
-    public List<EmployeeDto> OrderEmployeeDtos { get; set; }
-
-    public List<CarDto> OrderCarDtos { get; set; }
-
     public List<OrderServiceDto> OrderServicesDtos { get; set; }
 }

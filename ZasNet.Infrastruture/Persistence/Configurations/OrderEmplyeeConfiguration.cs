@@ -4,14 +4,14 @@ using ZasNet.Domain.Entities;
 
 namespace ZasNet.Infrastruture.Persistence.Configurations;
 
-public class OrderEmplyeeConfiguration : IEntityTypeConfiguration<OrderEmployee>
+public class OrderEmplyeeConfiguration : IEntityTypeConfiguration<OrderServiceEmployee>
 {
-    public void Configure(EntityTypeBuilder<OrderEmployee> builder)
+    public void Configure(EntityTypeBuilder<OrderServiceEmployee> builder)
     {
-        builder.ToTable("OrderEmployees");
+        builder.ToTable("OrderServiceEmployees");
 
-        builder.HasOne(c => c.Order).WithMany(c => c.OrderEmployees).HasForeignKey(c => c.OrderId).OnDelete(DeleteBehavior.Cascade);
-        builder.HasOne(c => c.Employee).WithMany(c => c.OrderEmployees).HasForeignKey(c => c.EmployeeId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(c => c.OrderService).WithMany(c => c.OrderServiceEmployees).HasForeignKey(c => c.OrderServiceId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne(c => c.Employee).WithMany(c => c.OrderServiceEmployees).HasForeignKey(c => c.EmployeeId).OnDelete(DeleteBehavior.Restrict);
 
     }
 }

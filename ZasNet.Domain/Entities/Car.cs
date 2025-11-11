@@ -12,6 +12,6 @@ public class Car : LockedItemBase
 
     public CarModel CarModel { get; set; }
 
-    public ICollection<OrderCar> OrderCars { get; set; }
+    public ICollection<OrderServiceCar> OrderServiceCars { get; set; }
 
 }

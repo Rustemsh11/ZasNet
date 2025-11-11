@@ -12,9 +12,8 @@ public class SaveOrderCommandHandler(IRepositoryManager repositoryManager,
     public async Task Handle(SaveOrderCommand request, CancellationToken cancellationToken)
     {
         var order = await repositoryManager.OrderRepository.FindByCondition(c => c.Id == request.OrderDto.Id, true)
-            .Include(c=>c.OrderCars)
-            .Include(c=>c.OrderEmployees)
-            .Include(c=>c.OrderServices)
+            .Include(c=>c.OrderServices).ThenInclude(c=>c.OrderServiceCars)
+            .Include(c=>c.OrderServices).ThenInclude(c=>c.OrderServiceEmployees)
             .SingleAsync(cancellationToken);
 
         var upsertOrderDto = mapper.Map<Order.UpsertOrderDto>(request.OrderDto);

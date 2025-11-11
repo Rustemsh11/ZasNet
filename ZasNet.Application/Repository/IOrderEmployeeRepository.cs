@@ -2,6 +2,6 @@
 
 namespace ZasNet.Application.Repository;
 
-public interface IOrderEmployeeRepository : IRepository<OrderEmployee>
+public interface IOrderEmployeeRepository : IRepository<OrderServiceEmployee>
 {
 }

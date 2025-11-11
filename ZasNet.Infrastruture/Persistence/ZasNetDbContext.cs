@@ -11,8 +11,8 @@ public class ZasNetDbContext: DbContext
     public DbSet<Car> Cars { get; set; }
     public DbSet<CarModel> CarModels { get; set; }
     public DbSet<Employee> Employees { get; set; }
-    public DbSet<OrderEmployee> OrderPerformEmployees { get; set; }
-    public DbSet<OrderCar> OrderPerformCars { get; set; }
+    public DbSet<OrderServiceEmployee> OrderServiceEmployees { get; set; }
+    public DbSet<OrderServiceCar> OrderServiceCars { get; set; }
     public DbSet<Document> Documents { get; set; }
     public DbSet<OrderService> OrderServices { get; set; }
     public DbSet<User> User { get; set; }

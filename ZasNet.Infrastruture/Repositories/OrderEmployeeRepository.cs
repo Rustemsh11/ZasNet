@@ -5,6 +5,6 @@ using ZasNet.Infrastruture.Persistence;
 namespace ZasNet.Infrastruture.Repositories;
 
 public class OrderEmployeeRepository(ZasNetDbContext zasNetDbContext)
-    : Repository<OrderEmployee>(zasNetDbContext), IOrderEmployeeRepository
+    : Repository<OrderServiceEmployee>(zasNetDbContext), IOrderEmployeeRepository
 {
 }

@@ -13,19 +13,29 @@ public class OrderMapper: Profile
         CreateMap<Order, OrderDto>()
             .ForMember(c => c.CreatedUser, c => c.MapFrom(src =>
                     new EmployeeDto() { Id = src.CreatedEmployeeId, Name = src.CreatedEmployee.Name}))
-            .ForMember(c => c.OrderEmployeeDtos, c => c.MapFrom(src =>
-                    src.OrderEmployees.Select(c => new EmployeeDto() { Id = c.EmployeeId, Name = c.Employee.Name })))
-            .ForMember(c => c.OrderCarDtos, c => c.MapFrom(src =>
-                    src.OrderCars.Select(c => new CarDto() { Id = c.CarId, Name = $"{c.Car.CarModel.Name} ({c.Car.Number})" })))
             .ForMember(c => c.OrderServicesDtos, c => c.MapFrom(src =>
-                    src.OrderServices.Select(c => new OrderServiceDto(c.ServiceId, c.Price, c.TotalVolume))));
+                    src.OrderServices.Select(c => new OrderServiceDto(c.ServiceId, c.Price, c.TotalVolume,
+                    c.OrderServiceEmployees.Select(x=> new OrderServiceEmployeeDto() 
+                    {
+                        Employee = new EmployeeDto()
+                        {
+                            Id =x.EmployeeId,
+                            Name = x.Employee.Name,
+                        },
+                        OrderServiceId = c.Id
+                    }).ToList(),
+                    c.OrderServiceCars.Select(x => new OrderServiceCarDto()
+                    {
+                        Car = new CarDto()
+                        {
+                            Id =x.CarId,
+                            Name = $"{x.Car.CarModel.Name}({x.Car.Number})",
+                        },
+                        OrderServiceId = c.Id
+                    }).ToList()))));;
 
         CreateMap<OrderDto, Order.UpsertOrderDto>()
             .ForMember(c=>c.CreatedEmployeeId, c=>c.MapFrom(src=> src.CreatedUser.Id))
-            .ForMember(c=>c.OrderEmployees, c=>c.MapFrom(src=>
-                src.OrderEmployeeDtos.Select(c=> new OrderEmployee() { EmployeeId = c.Id, OrderId = src.Id})))
-            .ForMember(c=>c.OrderCars, c=>c.MapFrom(src=>
-                src.OrderCarDtos.Select(c=> new OrderCar() { CarId = c.Id, OrderId = src.Id})))
             .ForMember(c=>c.OrderServices, c=>c.MapFrom(src=>
                 src.OrderServicesDtos.Select(c=> new OrderService() { ServiceId = c.ServiceId, Price = c.Price, TotalVolume = c.TotalVolume, PriceTotal = c.Price * (decimal)c.TotalVolume, OrderId = src.Id})));
     }

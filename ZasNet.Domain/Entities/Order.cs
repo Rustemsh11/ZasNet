@@ -26,15 +26,11 @@ public class Order : LockedItemBase
 
     public DateTime? ClosedDate { get; private set;}
 
-    public ClientType? ClientType { get; private set;}
+    public ClientType ClientType { get; private set;}
 
     public int CreatedEmployeeId { get; set; }
 
     public ICollection<OrderService> OrderServices { get; set; }
-
-    public ICollection<OrderCar> OrderCars { get; set; }
-
-    public ICollection<OrderEmployee> OrderEmployees { get; set; }
 
     public ICollection<Document> OrderDocuments { get; set; }
 
@@ -60,13 +56,9 @@ public class Order : LockedItemBase
 
         public int CreatedEmployeeId { get; set; }
 
-        public ClientType? ClientType { get; set; }
+        public ClientType ClientType { get; set; }
 
         public List<OrderService> OrderServices { get; set; }
-
-        public List<OrderCar> OrderCars { get; set; }
-
-        public List<OrderEmployee> OrderEmployees { get; set; }
     }
     
     public static Order Create(UpsertOrderDto orderDto)
@@ -84,8 +76,6 @@ public class Order : LockedItemBase
             Status = OrderStatus.Created,
             CreatedDate = DateTime.Now,
             OrderServices = orderDto.OrderServices,
-            OrderCars = orderDto.OrderCars,
-            OrderEmployees = orderDto.OrderEmployees,
             ClientType = orderDto.ClientType,
             CreatedEmployeeId = orderDto.CreatedEmployeeId,
         };
@@ -109,8 +99,6 @@ public class Order : LockedItemBase
         Status = OrderStatus.Created;
         CreatedDate = DateTime.Now;
         OrderServices = orderDto.OrderServices;
-        OrderCars = orderDto.OrderCars;
-        OrderEmployees = orderDto.OrderEmployees;
         ClientType = orderDto.ClientType;
         CreatedEmployeeId = orderDto.CreatedEmployeeId;
     }

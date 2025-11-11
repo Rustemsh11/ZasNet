@@ -5,6 +5,6 @@ using ZasNet.Infrastruture.Persistence;
 namespace ZasNet.Infrastruture.Repositories;
 
 public class OrderCarRepository(ZasNetDbContext zasNetDbContext)
-    : Repository<OrderCar>(zasNetDbContext), IOrderCarRepository
+    : Repository<OrderServiceCar>(zasNetDbContext), IOrderCarRepository
 {
 }

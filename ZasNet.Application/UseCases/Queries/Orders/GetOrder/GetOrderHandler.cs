@@ -13,9 +13,8 @@ public class GetOrderHandler(IRepositoryManager repositoryManager,
     {
         var order = await repositoryManager.OrderRepository.FindByCondition(c => c.Id == request.orderId, false)
             .Include(c=>c.CreatedEmployee)
-            .Include(c=>c.OrderCars).ThenInclude(c=>c.Car).ThenInclude(c=>c.CarModel)
-            .Include(c=>c.OrderEmployees).ThenInclude(c=>c.Employee)
-            .Include(c=>c.OrderServices)
+            .Include(c=>c.OrderServices).ThenInclude(c=>c.OrderServiceCars).ThenInclude(c=>c.Car).ThenInclude(c => c.CarModel)
+            .Include(c=>c.OrderServices).ThenInclude(c=>c.OrderServiceEmployees).ThenInclude(c=>c.Employee)
             .SingleOrDefaultAsync(cancellationToken)
             ?? throw new ArgumentException($"Заявки с id: {request.orderId} не найден");
 

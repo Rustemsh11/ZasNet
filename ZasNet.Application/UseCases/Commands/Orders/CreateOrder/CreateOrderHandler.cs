@@ -14,18 +14,21 @@ public class CreateOrderHandler(IRepositoryManager repositoryManager) : IRequest
             ServiceId = c.ServiceId,
             Price = c.Price,
             TotalVolume = c.TotalVolume,
-            PriceTotal = c.Price * (decimal)c.TotalVolume
+            PriceTotal = c.Price * (decimal)c.TotalVolume,
+            OrderServiceCars = c.OrderServiceCarDtos
+                .Select(x => new OrderServiceCar
+                {
+                    CarId = x.Car.Id
+                })
+                .ToList(),
+            OrderServiceEmployees = c.OrderServiceEmployeeDtos
+                .Select(x => new OrderServiceEmployee
+                {
+                    EmployeeId = x.Employee.Id
+                })
+                .ToList(),
         }).ToList();
 
-        var orderEmployees = request.OrderDto.OrderEmployeeDtos.Select(c => new OrderEmployee()
-        {
-            EmployeeId = c.Id
-        }).ToList();
-        
-        var orderCars = request.OrderDto.OrderCarDtos.Select(c => new OrderCar()
-        {
-            CarId = c.Id
-        }).ToList();
 
 
         var order = Order.Create(new UpsertOrderDto()
@@ -38,8 +41,6 @@ public class CreateOrderHandler(IRepositoryManager repositoryManager) : IRequest
             OrderPriceAmount = request.OrderDto.OrderPriceAmount,
             PaymentType = request.OrderDto.PaymentType,
             Description = request.OrderDto.Description,
-            OrderCars = orderCars,
-            OrderEmployees = orderEmployees,
             OrderServices = orderServices,
             ClientType = request.OrderDto.ClientType,
             CreatedEmployeeId = request.OrderDto.CreatedUser.Id,
