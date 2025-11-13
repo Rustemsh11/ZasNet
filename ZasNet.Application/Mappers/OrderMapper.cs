@@ -14,7 +14,7 @@ public class OrderMapper: Profile
             .ForMember(c => c.CreatedUser, c => c.MapFrom(src =>
                     new EmployeeDto() { Id = src.CreatedEmployeeId, Name = src.CreatedEmployee.Name}))
             .ForMember(c => c.OrderServicesDtos, c => c.MapFrom(src =>
-                    src.OrderServices.Select(c => new OrderServiceDto(c.ServiceId, c.Price, c.TotalVolume,
+                    src.OrderServices.Select(c => new OrderServiceDto(c.Id, c.ServiceId, c.Price, c.TotalVolume,
                     c.OrderServiceEmployees.Select(x=> new OrderServiceEmployeeDto() 
                     {
                         Employee = new EmployeeDto()
@@ -37,6 +37,25 @@ public class OrderMapper: Profile
         CreateMap<OrderDto, Order.UpsertOrderDto>()
             .ForMember(c=>c.CreatedEmployeeId, c=>c.MapFrom(src=> src.CreatedUser.Id))
             .ForMember(c=>c.OrderServices, c=>c.MapFrom(src=>
-                src.OrderServicesDtos.Select(c=> new OrderService() { ServiceId = c.ServiceId, Price = c.Price, TotalVolume = c.TotalVolume, PriceTotal = c.Price * (decimal)c.TotalVolume, OrderId = src.Id})));
+                src.OrderServicesDtos.Select(c=> new OrderService() 
+                { 
+                    Id = c.Id,
+                    ServiceId = c.ServiceId, 
+                    Price = c.Price, 
+                    TotalVolume = c.TotalVolume, 
+                    PriceTotal = 
+                    c.Price * (decimal)c.TotalVolume, 
+                    OrderId = src.Id,
+                    OrderServiceCars = c.OrderServiceCarDtos.Select(c=> new OrderServiceCar()
+                    {
+                        OrderServiceId = c.OrderServiceId,
+                        CarId = c.Car.Id
+                    }).ToList(),
+                    OrderServiceEmployees = c.OrderServiceEmployeeDtos.Select(c=> new OrderServiceEmployee()
+                    {
+                        OrderServiceId = c.OrderServiceId,
+                        EmployeeId = c.Employee.Id
+                    }).ToList()
+                })));
     }
 }
