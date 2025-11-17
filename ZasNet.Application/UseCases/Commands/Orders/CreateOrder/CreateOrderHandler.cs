@@ -1,11 +1,14 @@
 ﻿using MediatR;
 using ZasNet.Application.Repository;
+using ZasNet.Application.Services;
 using ZasNet.Domain.Entities;
 using static ZasNet.Domain.Entities.Order;
 
 namespace ZasNet.Application.UseCases.Commands.Orders.CreateOrder;
 
-public class CreateOrderHandler(IRepositoryManager repositoryManager) : IRequestHandler<CreateOrderCommand>
+public class CreateOrderHandler(
+    IRepositoryManager repositoryManager,
+    IOrderNotificationService orderNotificationService) : IRequestHandler<CreateOrderCommand>
 {
     public async Task Handle(CreateOrderCommand request, CancellationToken cancellationToken)
     {
@@ -47,7 +50,7 @@ public class CreateOrderHandler(IRepositoryManager repositoryManager) : IRequest
         });
         
         repositoryManager.OrderRepository.Create(order);
-
         await repositoryManager.SaveAsync(cancellationToken);
+        await orderNotificationService.NotifyOrderCreatedAsync(order, cancellationToken);
     }
 }

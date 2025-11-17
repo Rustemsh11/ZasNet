@@ -2,7 +2,7 @@
 
 namespace ZasNet.Domain.Entities;
 
-public class Order : LockedItemBase
+    public class Order : LockedItemBase
 {
     public string Client {  get; set; }
 
@@ -101,5 +101,11 @@ public class Order : LockedItemBase
         OrderServices = orderDto.OrderServices;
         ClientType = orderDto.ClientType;
         CreatedEmployeeId = orderDto.CreatedEmployeeId;
+    }
+
+    public void UpdateStatus(OrderStatus status)
+    {
+        Status = status;
+        ClosedDate = status == OrderStatus.Closed ? DateTime.UtcNow : null;
     }
 }
