@@ -12,17 +12,11 @@ public class TelegramController(IMediator mediator) : ControllerBase
 {
     private readonly IMediator _mediator = mediator;
 
-    [HttpPost]
-    public Task Post(Update update)
-    {
-        Console.WriteLine(update.Message.Text);
-        return Task.CompletedTask;
-    }
-
-    [HttpPost("update/{secret}")]
+    [HttpPost("update")]
     [AllowAnonymous]
-    public async Task<IActionResult> ReceiveUpdate([FromRoute] string secret, [FromBody] Update update, CancellationToken cancellationToken)
+    public async Task<IActionResult> ReceiveUpdate([FromBody] Update update, CancellationToken cancellationToken)
     {
+        var secret = Request.Headers["X-Telegram-Bot-Api-Secret-Token"].FirstOrDefault();
         var result = await _mediator.Send(new ChangeOrderStausFromTgCommand(secret, update), cancellationToken);
         return StatusCode(result.StatusCode);
     }
