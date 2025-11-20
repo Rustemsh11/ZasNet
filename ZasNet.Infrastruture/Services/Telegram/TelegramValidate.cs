@@ -1,5 +1,4 @@
 using ZasNet.Application.Services;
-using ZasNet.Infrastruture;
 using Microsoft.Extensions.Options;
 
 namespace ZasNet.Infrastruture.Services;

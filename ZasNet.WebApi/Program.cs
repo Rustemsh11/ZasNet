@@ -14,10 +14,14 @@ using Telegram.Bot.Types.Payments;
 using ZasNet.Application;
 using ZasNet.Application.Repository;
 using ZasNet.Application.Services;
+using ZasNet.Application.Services.Telegram;
+using ZasNet.Application.Services.Telegram.Handlers;
+using ZasNet.Domain.Interfaces;
 using ZasNet.Infrastruture;
 using ZasNet.Infrastruture.Persistence;
 using ZasNet.Infrastruture.Repositories;
 using ZasNet.Infrastruture.Services;
+using ZasNet.Infrastruture.Services.Telegram;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,6 +62,10 @@ builder.Services.AddScoped<IPasswordHashService, PasswordHashService>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddSingleton<IOrderTelegramMessageBuilder, OrderTelegramMessageBuilder>();
 builder.Services.AddSingleton<ITelegramValidate, TelegramValidate>();
+builder.Services.AddScoped<IMessageTypeResolver, MessageTypeResolver>();
+builder.Services.AddScoped<ITelegramMessageHandler, StartCommandHandler>();
+
+builder.Services.AddScoped<TelegramMessageProcessor>();
 
 var telegramSettings = builder.Configuration.GetSection(nameof(TelegramSettings)).Get<TelegramSettings>();
 if (telegramSettings is not null && telegramSettings.IsEnabled)

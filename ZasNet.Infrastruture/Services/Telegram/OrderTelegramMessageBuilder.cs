@@ -4,7 +4,7 @@ using ZasNet.Application.Services;
 using ZasNet.Domain.Entities;
 using ZasNet.Domain.Enums;
 
-namespace ZasNet.Infrastruture.Services;
+namespace ZasNet.Infrastruture.Services.Telegram;
 
 public class OrderTelegramMessageBuilder : IOrderTelegramMessageBuilder
 {

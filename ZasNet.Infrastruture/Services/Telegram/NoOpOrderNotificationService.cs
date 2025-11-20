@@ -1,7 +1,7 @@
 using ZasNet.Application.Services;
 using ZasNet.Domain.Entities;
 
-namespace ZasNet.Infrastruture.Services;
+namespace ZasNet.Infrastruture.Services.Telegram;
 
 public class NoOpOrderNotificationService : IOrderNotificationService
 {
