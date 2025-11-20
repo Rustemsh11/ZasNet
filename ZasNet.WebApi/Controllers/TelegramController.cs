@@ -38,11 +38,11 @@ public class TelegramController(IMediator mediator,
                 {
                     ChatId = update.Message.Chat.Id,
                     Id = update.Message.Id,
-                    Username = update.Message.From.Username, 
+                    Username = update.Message?.From?.Username, 
                 },
                 MessageId = update.Message.MessageId,
                 Text = update.Message.Text,
-                Photo = update.Message.Photo.Select(c=> new TelegramPhoto()
+                Photo = update.Message.Photo?.Select(c=> new TelegramPhoto()
                 {
                     FileId = c.FileId,
                     FileSize = c.FileSize,
@@ -52,7 +52,7 @@ public class TelegramController(IMediator mediator,
                 }).ToArray(),
 
             },
-            CallbackQuery = new TelegramCallbackQuery()
+            CallbackQuery = update.CallbackQuery == null ? null : new TelegramCallbackQuery()
             {
                 Data = update.CallbackQuery.Data,
                 From = new TelegramUser()
@@ -73,7 +73,7 @@ public class TelegramController(IMediator mediator,
                     },
                     MessageId = update.CallbackQuery.Message.MessageId,
                     Text = update.CallbackQuery.Message.Text,
-                    Photo = update.CallbackQuery.Message.Photo.Select(c => new TelegramPhoto()
+                    Photo = update.CallbackQuery.Message.Photo?.Select(c => new TelegramPhoto()
                     {
                         FileId = c.FileId,
                         FileSize = c.FileSize,

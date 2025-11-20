@@ -60,10 +60,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<IPasswordHashService, PasswordHashService>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+
 builder.Services.AddSingleton<IOrderTelegramMessageBuilder, OrderTelegramMessageBuilder>();
 builder.Services.AddSingleton<ITelegramValidate, TelegramValidate>();
 builder.Services.AddScoped<IMessageTypeResolver, MessageTypeResolver>();
+builder.Services.AddScoped<ITelegramBotAnswerService, TelegramBotAnswerService>();
+
 builder.Services.AddScoped<ITelegramMessageHandler, StartCommandHandler>();
+builder.Services.AddScoped<ITelegramMessageHandler, SaveUserChatHandler>();
 
 builder.Services.AddScoped<TelegramMessageProcessor>();
 
@@ -71,6 +75,8 @@ var telegramSettings = builder.Configuration.GetSection(nameof(TelegramSettings)
 if (telegramSettings is not null && telegramSettings.IsEnabled)
 {
     //tuna http 5142
+    //
+
     //    $TOKEN = "<BOT_TOKEN>"
     //$PUBLIC_URL = "https://<subdomain>.tuna.am/telegram/update"
     //$SECRET = "<YOUR_SECRET>"
