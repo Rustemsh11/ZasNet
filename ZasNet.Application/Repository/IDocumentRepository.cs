@@ -2,6 +2,6 @@
 
 namespace ZasNet.Application.Repository;
 
-public interface IDocumentRepository : IRepository<Document>
+public interface IDocumentRepository : ILockedItemRepository<Document>
 {
 }

@@ -1,25 +1,21 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using System.Runtime;
-using System.Text.Json;
+﻿using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using ZasNet.Domain.Entities;
+using Telegram.Bot.Types.ReplyMarkups;
+using ZasNet.Application.Services.Telegram;
+using ZasNet.Domain.Telegram;
 
 namespace ZasNet.Infrastruture.Services.Telegram;
 
 public class TelegramBotAnswerService : ITelegramBotAnswerService
 {
     private readonly ITelegramBotClient telegramBotClient;
-    private readonly IOptions<TelegramSettings> telegramOptions;
 
     public TelegramBotAnswerService(
         ITelegramBotClient telegramBotClient,
         IOptions<TelegramSettings> telegramOptions)
     {
         this.telegramBotClient = telegramBotClient;
-        this.telegramOptions = telegramOptions;
     }
 
     public async Task SendMessageAsync(long chatId, string text, CancellationToken cancellationToken = default)
@@ -35,31 +31,105 @@ public class TelegramBotAnswerService : ITelegramBotAnswerService
         }
     }
 
+    public async Task SendCachedFreeOrderPageAsync(long chatId, string text, List<Button> buttons, int currentPage, int totalPages, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var keyboardRows = this.GetInlineButtons(buttons);
+
+            // nav row
+            if (totalPages > 1)
+            {
+                var navRow = new List<InlineKeyboardButton>(3);
+                if (currentPage > 1)
+                {
+                    navRow.Add(InlineKeyboardButton.WithCallbackData("⟨ Назад", $"free_orders:page:{currentPage - 1}"));
+                }
+
+                navRow.Add(InlineKeyboardButton.WithCallbackData($"Стр {currentPage}/{totalPages}", "noop"));
+
+                if (currentPage < totalPages)
+                {
+                    navRow.Add(InlineKeyboardButton.WithCallbackData("Вперед ⟩", $"free_orders:page:{currentPage + 1}"));
+                }
+
+                keyboardRows.Add(navRow.ToArray());
+            }
+
+            await telegramBotClient.SendMessage(new ChatId(chatId), text, replyMarkup: new InlineKeyboardMarkup(keyboardRows), cancellationToken: cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // add liger
+        }
+    }
+
     public Task AnswerCallbackQueryAsync(string callbackQueryId, string? text = null, CancellationToken cancellationToken = default)
     {
         return Task.CompletedTask;
-        //try
-        //{
-        //    var url = $"{_baseUrl}/answerCallbackQuery";
-        //    var payload = new
-        //    {
-        //        callback_query_id = callbackQueryId,
-        //        text = text,
-        //        show_alert = false
-        //    };
+    } //check to delete
 
-        //    var json = JsonSerializer.Serialize(payload);
-        //    var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+    public async Task SendMessageWithMenuAsync(long chatId, string text, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var keyboard = new ReplyKeyboardMarkup(new[]
+            {
+                new[] { new KeyboardButton("Список моих открытых заявок") },
+                new[] { new KeyboardButton("Список свободных заявок") },
+                new[] { new KeyboardButton("Мои заявки за месяц") },
+            })
+            {
+                ResizeKeyboard = true,
+                OneTimeKeyboard = false,
+                Selective = false
+            };
 
-        //    var response = await httpClient.PostAsync(url, content, cancellationToken);
-        //    response.EnsureSuccessStatusCode();
+            await telegramBotClient.SendMessage(new ChatId(chatId), text, replyMarkup: keyboard, cancellationToken: cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // add liger
+        }
+    }
 
-        //    _logger.LogInformation("Callback query {CallbackQueryId} обработан", callbackQueryId);
-        //}
-        //catch (Exception ex)
-        //{
-        //    _logger.LogError(ex, "Ошибка при обработке callback query {CallbackQueryId}", callbackQueryId);
-        //    throw;
-        //}
+    public async Task SendMessageAsync(long chatId, string text, List<Button> buttons, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await telegramBotClient.SendMessage(new ChatId(chatId), text, replyMarkup: new InlineKeyboardMarkup(this.GetInlineButtons(buttons)), cancellationToken: cancellationToken);
+
+        }
+        catch (Exception ex)
+        {
+            // add liger
+        }
+    }
+
+    private List<InlineKeyboardButton[]> GetInlineButtons(List<Button> buttons)
+    {
+        var keyboardRows = new List<InlineKeyboardButton[]>();
+
+        // service buttons (2 per row)
+        for (int i = 0; i < buttons.Count; i += 2)
+        {
+            if (i + 1 < buttons.Count)
+            {
+                keyboardRows.Add(new[]
+                {
+                        InlineKeyboardButton.WithCallbackData(buttons[i].Text, buttons[i].CallbackData),
+                        InlineKeyboardButton.WithCallbackData(buttons[i + 1].Text, buttons[i + 1].CallbackData)
+                    });
+            }
+            else
+            {
+                keyboardRows.Add(new[]
+                {
+                        InlineKeyboardButton.WithCallbackData(buttons[i].Text, buttons[i].CallbackData)
+                    });
+            }
+        }
+
+        return keyboardRows;
     }
 }

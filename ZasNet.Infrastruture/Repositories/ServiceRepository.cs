@@ -5,6 +5,6 @@ using ZasNet.Infrastruture.Persistence;
 namespace ZasNet.Infrastruture.Repositories;
 
 public class ServiceRepository(ZasNetDbContext zasNetDbContext)
-    : Repository<Service>(zasNetDbContext), IServiceRepository
+    : LockedItemRepository<Service>(zasNetDbContext), IServiceRepository
 {
 }

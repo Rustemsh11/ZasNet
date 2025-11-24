@@ -2,6 +2,6 @@
 
 namespace ZasNet.Application.Repository;
 
-public interface ICarRepository : IRepository<Car>
+public interface ICarRepository : ILockedItemRepository<Car>
 {
 }

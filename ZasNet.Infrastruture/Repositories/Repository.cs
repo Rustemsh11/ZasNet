@@ -6,9 +6,15 @@ using ZasNet.Infrastruture.Persistence;
 
 namespace ZasNet.Infrastruture.Repositories;
 
-public class Repository<T>(
-    ZasNetDbContext zasNetDbContext) : IRepository<T> where T : BaseItem
+public class Repository<T> : IRepository<T> where T : BaseItem
 {
+    protected readonly ZasNetDbContext zasNetDbContext;
+
+    public Repository(ZasNetDbContext zasNetDbContext)
+    {
+        this.zasNetDbContext = zasNetDbContext;
+    }
+
     public void Create(T entity)
     {
         zasNetDbContext.Set<T>().Add(entity);

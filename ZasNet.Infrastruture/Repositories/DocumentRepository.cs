@@ -5,6 +5,6 @@ using ZasNet.Infrastruture.Persistence;
 namespace ZasNet.Infrastruture.Repositories;
 
 public class DocumentRepository(ZasNetDbContext zasNetDbContext) 
-    : Repository<Document>(zasNetDbContext), IDocumentRepository 
+    : LockedItemRepository<Document>(zasNetDbContext), IDocumentRepository 
 {
 }

@@ -2,6 +2,6 @@
 
 namespace ZasNet.Application.Repository;
 
-public interface IOrderRepository: IRepository<Order>
+public interface IOrderRepository: ILockedItemRepository<Order>
 {
 }

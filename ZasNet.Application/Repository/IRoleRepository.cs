@@ -2,6 +2,6 @@
 
 namespace ZasNet.Application.Repository;
 
-public interface IRoleRepository : IRepository<Role>
+public interface IRoleRepository : ILockedItemRepository<Role>
 {
 }

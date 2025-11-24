@@ -5,6 +5,6 @@ using ZasNet.Infrastruture.Persistence;
 namespace ZasNet.Infrastruture.Repositories;
 
 public class CarRepository(ZasNetDbContext zasNetDbContext) 
-    : Repository<Car>(zasNetDbContext), ICarRepository
+    : LockedItemRepository<Car>(zasNetDbContext), ICarRepository
 {
 }

@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Telegram.Bot.Types;
 using ZasNet.Application.Services.Telegram;
 using ZasNet.Domain.Telegram;
-using ZasNet.Infrastruture.Services.Telegram;
 
 namespace ZasNet.WebApi.Controllers;
 
@@ -25,18 +24,19 @@ public class TelegramController(IMediator mediator,
         var secret = Request.Headers["X-Telegram-Bot-Api-Secret-Token"].FirstOrDefault();
         if(update == null)
         {
-            return BadRequest("Обновление не может быть пустым");
+            return BadRequest("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ");
         }
 
+        var chatId = update?.Message?.Chat.Id ?? update.CallbackQuery.Message.Chat.Id;
         var result = await messageProcessor.ProcessAsync(new TelegramUpdate()
         {
             UpdateId = update.Id,
-            Message = new TelegramMessage()
+            Message = update.Message == null ? null :  new TelegramMessage()
             {
                 Date = update.Message.Date,
                 From = new TelegramUser()
                 {
-                    ChatId = update.Message.Chat.Id,
+                    ChatId = chatId,
                     Id = update.Message.Id,
                     Username = update.Message?.From?.Username, 
                 },
@@ -57,7 +57,7 @@ public class TelegramController(IMediator mediator,
                 Data = update.CallbackQuery.Data,
                 From = new TelegramUser()
                 {
-                    ChatId = update.CallbackQuery.Message.Chat.Id,
+                    ChatId = chatId,
                     Id = update.CallbackQuery.Message.Id,
                     Username = update.CallbackQuery.Message.From.Username,
                 },
@@ -86,48 +86,61 @@ public class TelegramController(IMediator mediator,
             },
         }, cancellationToken);
 
-        if (!result.Success)
-        {
-            if (update.Message != null && !string.IsNullOrEmpty(result.ResponseMessage))
-            {
-                await telegramBotService.SendMessageAsync(
-                    update.Message.Chat.Id,
-                    result.ResponseMessage,
-                    cancellationToken);
-            }
+        //if (!result.Success)
+        //{
+        //    if (update.Message != null && !string.IsNullOrEmpty(result.ResponseMessage))
+        //    {
+        //    }
 
-            return Ok();
-        }
-
-        // Отправляем ответ пользователю
-        if (!string.IsNullOrEmpty(result.ResponseMessage))
-        {
-            long chatId = 0;
-
-            // Определяем chatId в зависимости от типа обновления
-            if (update.Message != null)
-            {
-                chatId = update.Message.Chat.Id;
-                await telegramBotService.SendMessageAsync(chatId, result.ResponseMessage, cancellationToken);
-            }
-            else if (update.CallbackQuery != null)
-            {
-                // Отвечаем на callback query
-                await telegramBotService.AnswerCallbackQueryAsync(
-                    update.CallbackQuery.Id,
-                    result.ResponseMessage,
-                    cancellationToken);
-
-                // Если есть сообщение, отправляем обновленное сообщение
-                if (update.CallbackQuery.Message != null)
-                {
-                    chatId = update.CallbackQuery.Message.Chat.Id;
-                    await telegramBotService.SendMessageAsync(chatId, result.ResponseMessage, cancellationToken);
-                }
-            }
-        }
+        //}
+        //await telegramBotService.SendMessageAsync(
+            //chatId,
+            //result.ResponseMessage,
+            //cancellationToken);
 
         return Ok();
+
+        //if (!string.IsNullOrEmpty(result.ResponseMessage))
+        //{
+        //    long chatId = 0;
+
+        //    if (update.Message != null)
+        //    {
+        //        chatId = update.Message.Chat.Id;
+        //        if (result.AttachMenu)
+        //        {
+        //            await telegramBotService.SendMessageWithMenuAsync(chatId, result.ResponseMessage, cancellationToken);
+        //        }
+        //        else
+        //        {
+        //            await telegramBotService.SendMessageAsync(chatId, result.ResponseMessage, cancellationToken);
+        //        }
+        //    }
+        //    else if (update.CallbackQuery != null)
+        //    {
+        //        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ callback query
+        //        await telegramBotService.AnswerCallbackQueryAsync(
+        //            update.CallbackQuery.Id,
+        //            result.ResponseMessage,
+        //            cancellationToken);
+
+        //        // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+        //        if (update.CallbackQuery.Message != null)
+        //        {
+        //            chatId = update.CallbackQuery.Message.Chat.Id;
+        //            if (result.AttachMenu)
+        //            {
+        //                await telegramBotService.SendMessageWithMenuAsync(chatId, result.ResponseMessage, cancellationToken);
+        //            }
+        //            else
+        //            {
+        //                await telegramBotService.SendMessageAsync(chatId, result.ResponseMessage, cancellationToken);
+        //            }
+        //        }
+        //    }
+        //}
+
+        //return Ok();
     }
 }
 

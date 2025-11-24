@@ -61,13 +61,19 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<IPasswordHashService, PasswordHashService>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
-builder.Services.AddSingleton<IOrderTelegramMessageBuilder, OrderTelegramMessageBuilder>();
 builder.Services.AddSingleton<ITelegramValidate, TelegramValidate>();
 builder.Services.AddScoped<IMessageTypeResolver, MessageTypeResolver>();
 builder.Services.AddScoped<ITelegramBotAnswerService, TelegramBotAnswerService>();
+builder.Services.AddSingleton<IFreeOrdersCache, FreeOrdersCache>();
 
 builder.Services.AddScoped<ITelegramMessageHandler, StartCommandHandler>();
 builder.Services.AddScoped<ITelegramMessageHandler, SaveUserChatHandler>();
+builder.Services.AddScoped<ITelegramMessageHandler, MyOpenOrdersHandler>();
+builder.Services.AddScoped<ITelegramMessageHandler, FreeOrdersHandler>();
+builder.Services.AddScoped<ITelegramMessageHandler, MyOrdersForMonthHandler>();
+builder.Services.AddScoped<ITelegramMessageHandler, AssignEmployeeToOrderServiceEmployeeHandler>();
+builder.Services.AddScoped<ITelegramMessageHandler, ApproveAssinedNewOrderByEmployee>();
+builder.Services.AddScoped<ITelegramMessageHandler, RejectAssignedNewOrderByEmployee>();
 
 builder.Services.AddScoped<TelegramMessageProcessor>();
 
@@ -90,7 +96,7 @@ if (telegramSettings is not null && telegramSettings.IsEnabled)
             return new TelegramBotClient(options.Value.BotToken, httpClient);
         });
 
-    builder.Services.AddScoped<IOrderNotificationService, TelegramOrderNotificationService>();
+    builder.Services.AddScoped<IOrderNotificationService, OrderNotificationService>();
 }
 else
 {

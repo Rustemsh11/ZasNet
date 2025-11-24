@@ -5,6 +5,6 @@ using ZasNet.Infrastruture.Persistence;
 namespace ZasNet.Infrastruture.Repositories;
 
 public class OrderServiceRepository(ZasNetDbContext zasNetDbContext)
-    : Repository<OrderService>(zasNetDbContext), IOrderServiceRepository
+    : LockedItemRepository<OrderService>(zasNetDbContext), IOrderServiceRepository
 {
 }

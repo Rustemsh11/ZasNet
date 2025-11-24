@@ -4,4 +4,4 @@ using ZasNet.Infrastruture.Persistence;
 
 namespace ZasNet.Infrastruture.Repositories;
 
-public class RoleRepository(ZasNetDbContext zasNetDbContext): Repository<Role>(zasNetDbContext), IRoleRepository;
+public class RoleRepository(ZasNetDbContext zasNetDbContext): LockedItemRepository<Role>(zasNetDbContext), IRoleRepository;

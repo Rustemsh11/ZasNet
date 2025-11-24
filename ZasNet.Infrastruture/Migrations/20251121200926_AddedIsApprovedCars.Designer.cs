@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ZasNet.Infrastruture.Persistence;
 
@@ -11,9 +12,11 @@ using ZasNet.Infrastruture.Persistence;
 namespace ZasNet.Infrastruture.Migrations
 {
     [DbContext(typeof(ZasNetDbContext))]
-    partial class ZasNetDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251121200926_AddedIsApprovedCars")]
+    partial class AddedIsApprovedCars
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

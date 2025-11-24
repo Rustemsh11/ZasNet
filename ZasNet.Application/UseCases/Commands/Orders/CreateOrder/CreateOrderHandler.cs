@@ -1,6 +1,7 @@
 ﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using ZasNet.Application.Repository;
-using ZasNet.Application.Services;
+using ZasNet.Application.Services.Telegram;
 using ZasNet.Domain.Entities;
 using static ZasNet.Domain.Entities.Order;
 
@@ -51,6 +52,33 @@ public class CreateOrderHandler(
         
         repositoryManager.OrderRepository.Create(order);
         await repositoryManager.SaveAsync(cancellationToken);
-        await orderNotificationService.NotifyOrderCreatedAsync(order, cancellationToken);
+
+		var assignedEmployeeIds = orderServices
+			.SelectMany(s => s.OrderServiceEmployees)
+			.Select(ose => ose.EmployeeId)
+			.Distinct()
+			.ToList();
+
+		if (assignedEmployeeIds.Count > 0)
+		{
+			// Load required navigation properties before notification
+			order = await repositoryManager.OrderRepository
+				.FindByCondition(o => o.Id == order.Id, false)
+				.Include(o => o.OrderServices).ThenInclude(os => os.Service)
+				.Include(o => o.OrderServices).ThenInclude(os => os.OrderServiceEmployees).ThenInclude(ose => ose.Employee)
+				.Include(o => o.OrderServices).ThenInclude(os => os.OrderServiceCars).ThenInclude(osc => osc.Car).ThenInclude(c => c.CarModel)
+				.SingleAsync(cancellationToken);
+
+			var chatIds = repositoryManager.EmployeeRepository
+				.FindByCondition(e => assignedEmployeeIds.Contains(e.Id) && e.ChatId != null, false)
+				.Select(e => e.ChatId!.Value)
+				.Distinct()
+				.ToList();
+
+			foreach (var chatId in chatIds)
+			{
+				await orderNotificationService.NotifyOrderCreatedAsync(order, chatId, cancellationToken);
+			}
+		}
     }
 }

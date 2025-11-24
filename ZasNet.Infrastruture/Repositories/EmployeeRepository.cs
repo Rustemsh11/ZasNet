@@ -5,6 +5,6 @@ using ZasNet.Infrastruture.Persistence;
 namespace ZasNet.Infrastruture.Repositories;
 
 public class EmployeeRepository(ZasNetDbContext zasNetDbContext)
-    : Repository<Employee>(zasNetDbContext), IEmployeeRepository 
+    : LockedItemRepository<Employee>(zasNetDbContext), IEmployeeRepository 
 {
 }
