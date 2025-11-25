@@ -11,7 +11,6 @@ public interface IRepositoryManager
     IOrderRepository OrderRepository { get; }
     IOrderServiceRepository OrderServiceRepository { get; }
     IServiceRepository ServiceRepository { get; }
-    IUserRepository UserRepository { get; }
     IRoleRepository RoleRepository { get; }
     Task SaveAsync(CancellationToken cancellationToken);
 }

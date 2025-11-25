@@ -11,5 +11,17 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
         builder.ToTable("Employees");
 
         builder.Property(c=>c.Name).IsRequired();
+
+        builder.Property(c => c.Login).IsRequired().HasMaxLength(10);
+        builder.Property(c => c.Password).IsRequired();
+
+        builder.HasOne(c => c.Role).WithMany(c => c.Employees).HasForeignKey(c => c.RoleId);
+
+        builder.HasData(new Employee()
+        {
+            Id = 1,
+            Name = "Не известно",
+            RoleId = 3,
+        });
     }
 }

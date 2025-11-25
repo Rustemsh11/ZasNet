@@ -15,7 +15,6 @@ public class RepositoryManager : IRepositoryManager
     private readonly Lazy<IOrderRepository> orderRepository;
     private readonly Lazy<IOrderServiceRepository> orderServiceRepository;
     private readonly Lazy<IServiceRepository> serviceRepository;
-    private readonly Lazy<IUserRepository> userRepository;
     private readonly Lazy<IRoleRepository> roleRepository;
 
     public RepositoryManager(ZasNetDbContext zasNetDbContext)
@@ -30,7 +29,6 @@ public class RepositoryManager : IRepositoryManager
         orderRepository = new Lazy<IOrderRepository>(()=> new OrderRepository(context));
         orderServiceRepository = new Lazy<IOrderServiceRepository>(()=> new OrderServiceRepository(context));
         serviceRepository = new Lazy<IServiceRepository>(()=> new ServiceRepository(context));
-        userRepository = new Lazy<IUserRepository>(()=> new UserRepository(context));
         roleRepository = new Lazy<IRoleRepository>(()=> new RoleRepository(context));
     }
 
@@ -51,8 +49,6 @@ public class RepositoryManager : IRepositoryManager
     public IOrderServiceRepository OrderServiceRepository => this.orderServiceRepository.Value;
 
     public IServiceRepository ServiceRepository => this.serviceRepository.Value;
-
-    public IUserRepository UserRepository => this.userRepository.Value;
 
     public IRoleRepository RoleRepository => this.roleRepository.Value;
 

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ZasNet.Infrastruture.Persistence;
 
@@ -11,9 +12,11 @@ using ZasNet.Infrastruture.Persistence;
 namespace ZasNet.Infrastruture.Migrations
 {
     [DbContext(typeof(ZasNetDbContext))]
-    partial class ZasNetDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251125044318_addedeNewRole")]
+    partial class addedeNewRole
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -127,6 +130,8 @@ namespace ZasNet.Infrastruture.Migrations
 
                     b.HasIndex("OrderId");
 
+                    b.HasIndex("UploadedUserId");
+
                     b.ToTable("Documents", (string)null);
                 });
 
@@ -147,28 +152,14 @@ namespace ZasNet.Infrastruture.Migrations
                     b.Property<int?>("LockedByUserId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Login")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
                     b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Phone")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("RoleId");
 
                     b.ToTable("Employees", (string)null);
                 });
@@ -409,6 +400,36 @@ namespace ZasNet.Infrastruture.Migrations
                     b.ToTable("Services", (string)null);
                 });
 
+            modelBuilder.Entity("ZasNet.Domain.Entities.User", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Login")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Id")
+                        .IsUnique();
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("Users", (string)null);
+                });
+
             modelBuilder.Entity("ZasNet.Domain.Entities.Car", b =>
                 {
                     b.HasOne("ZasNet.Domain.Entities.CarModel", "CarModel")
@@ -427,18 +448,14 @@ namespace ZasNet.Infrastruture.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("ZasNet.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UploadedUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Order");
-                });
 
-            modelBuilder.Entity("ZasNet.Domain.Entities.Employee", b =>
-                {
-                    b.HasOne("ZasNet.Domain.Entities.Role", "Role")
-                        .WithMany("Employees")
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Role");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("ZasNet.Domain.Entities.Order", b =>
@@ -509,6 +526,17 @@ namespace ZasNet.Infrastruture.Migrations
                     b.Navigation("OrderService");
                 });
 
+            modelBuilder.Entity("ZasNet.Domain.Entities.User", b =>
+                {
+                    b.HasOne("ZasNet.Domain.Entities.Role", "Role")
+                        .WithMany("Users")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Role");
+                });
+
             modelBuilder.Entity("ZasNet.Domain.Entities.Car", b =>
                 {
                     b.Navigation("OrderServiceCars");
@@ -542,7 +570,7 @@ namespace ZasNet.Infrastruture.Migrations
 
             modelBuilder.Entity("ZasNet.Domain.Entities.Role", b =>
                 {
-                    b.Navigation("Employees");
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("ZasNet.Domain.Entities.Service", b =>

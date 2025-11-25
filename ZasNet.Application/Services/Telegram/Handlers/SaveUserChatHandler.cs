@@ -22,7 +22,7 @@ public class SaveUserChatHandler(IRepositoryManager repositoryManager, ITelegram
     {
         var userName = telegramUpdate.Message.Text.Substring("Логин:".Length).Trim();
 
-        var employee = await repositoryManager.EmployeeRepository.FindByCondition(c => c.Name == userName, true).SingleOrDefaultAsync(cancellationToken)
+        var employee = await repositoryManager.EmployeeRepository.FindByCondition(c => c.Login == userName, true).SingleOrDefaultAsync(cancellationToken)
             ?? throw new ArgumentException($"Нет пользователя с логином {userName}");
 
         employee.SetChatId(telegramUpdate.Message.From.ChatId);

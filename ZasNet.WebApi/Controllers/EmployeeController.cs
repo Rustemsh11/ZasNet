@@ -6,10 +6,10 @@ namespace ZasNet.WebApi.Controllers;
 
 [Route("api/v1/[controller]/[action]")]
 [ApiController]
-public class UserController(IMediator mediator) : ControllerBase
+public class EmployeeController(IMediator mediator) : ControllerBase
 {
     [HttpPost]
-    public async Task CreateUser([FromBody] CreateUserRequest createUserRequest, CancellationToken cancellationToken) 
+    public async Task CreateEmployee([FromBody] CreateEmployeeRequest createUserRequest, CancellationToken cancellationToken) 
     {
         await mediator.Send(createUserRequest, cancellationToken);
     }

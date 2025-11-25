@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using ZasNet.Application.CommonDtos;
 using ZasNet.Application.Repository;
@@ -13,7 +12,7 @@ public class GetAuthTokenHandler(IRepositoryManager repositoryManager,
 {
     public async Task<AccessTokenDto> Handle(GetAuthTokenRequest request, CancellationToken cancellationToken)
     {
-        var user = await repositoryManager.UserRepository.FindByCondition(c => c.Login == request.Login, false).Include(c=>c.Role).SingleOrDefaultAsync(cancellationToken)
+        var user = await repositoryManager.EmployeeRepository.FindByCondition(c => c.Login == request.Login, false).Include(c=>c.Role).SingleOrDefaultAsync(cancellationToken)
             ?? throw new ArgumentException($"Пользователь с логином: {request.Login} не найден");
 
         if (!passwordHashService.VerifyHashedPassword(user.Password, request.Password))

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ZasNet.Infrastruture.Persistence;
 
@@ -11,9 +12,11 @@ using ZasNet.Infrastruture.Persistence;
 namespace ZasNet.Infrastruture.Migrations
 {
     [DbContext(typeof(ZasNetDbContext))]
-    partial class ZasNetDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251125050508_removedUserTable")]
+    partial class removedUserTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -126,6 +129,8 @@ namespace ZasNet.Infrastruture.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("OrderId");
+
+                    b.HasIndex("UploadedUserId");
 
                     b.ToTable("Documents", (string)null);
                 });
@@ -427,6 +432,13 @@ namespace ZasNet.Infrastruture.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("ZasNet.Domain.Entities.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("UploadedUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Employee");
+
                     b.Navigation("Order");
                 });
 
@@ -435,7 +447,7 @@ namespace ZasNet.Infrastruture.Migrations
                     b.HasOne("ZasNet.Domain.Entities.Role", "Role")
                         .WithMany("Employees")
                         .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Role");

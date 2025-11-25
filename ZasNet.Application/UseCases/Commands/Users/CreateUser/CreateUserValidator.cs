@@ -2,7 +2,7 @@
 
 namespace ZasNet.Application.UseCases.Commands.Users.CreateUser;
 
-public class CreateUserValidator : AbstractValidator<CreateUserRequest>
+public class CreateUserValidator : AbstractValidator<CreateEmployeeRequest>
 {
     public CreateUserValidator()
     {

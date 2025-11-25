@@ -19,8 +19,6 @@ public class DocumentConfiguration : IEntityTypeConfiguration<Document>
         builder.Property(c=>c.UploadedDate).IsRequired().HasDefaultValueSql("GETDATE()");
         builder.Property(c => c.DocumentType).IsRequired().HasConversion(documentTypeConverter);
 
-        builder.HasOne(c=>c.User).WithMany().HasForeignKey(c=>c.UploadedUserId).OnDelete(DeleteBehavior.SetNull);
-
         builder.HasOne(c=>c.Order).WithMany(c=>c.OrderDocuments).HasForeignKey(c=>c.OrderId).OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -33,17 +33,17 @@ public class OrderNotificationService(ITelegramBotAnswerService telegramBotAnswe
                 {
                     if (serviceEmployees[k].Employee.ChatId == chatId)
                     {
-                        buttons.Add(new Button() { Text = $"Подтвердить {service.Service.Name}", CallbackData = $"approveorderservice:{serviceEmployees[k].Id}" });
-                        buttons.Add(new Button() { Text = $"Отказаться от {service.Service.Name}", CallbackData = $"rejectorderservice:{serviceEmployees[k].Id}" });
+                        buttons.Add(new Button() { Text = $"Подтвердить услугу {i+1}", CallbackData = $"approveorderservice:{serviceEmployees[k].Id}" });
+                        buttons.Add(new Button() { Text = $"Отказаться от услуги {i+1}", CallbackData = $"rejectorderservice:{serviceEmployees[k].Id}" });
                     }
 
                     if (serviceEmployees[k].Employee.Id == Constants.UnknowingEmployeeId)
                     {
-                        serviesText.AppendLine($"   🆓 Свободно ({k + 1})");
+                        serviesText.AppendLine($" {k + 1}  🆓 Свободно");
                     }
                     else
                     {
-                        serviesText.AppendLine($"   ❓ {serviceEmployees[k].Employee.Name}");
+                        serviesText.AppendLine($" {k + 1}  ❓ {serviceEmployees[k].Employee.Name}");
                     }
                 }
 

@@ -15,7 +15,6 @@ public class ZasNetDbContext: DbContext
     public DbSet<OrderServiceCar> OrderServiceCars { get; set; }
     public DbSet<Document> Documents { get; set; }
     public DbSet<OrderService> OrderServices { get; set; }
-    public DbSet<User> User { get; set; }
 
     public ZasNetDbContext(DbContextOptions<ZasNetDbContext> options)
         : base(options)
@@ -43,7 +42,6 @@ public class ZasNetDbContext: DbContext
         modelBuilder.ApplyConfiguration(new OrderServiceConfiguration());
         modelBuilder.ApplyConfiguration(new OrderCarConfiguration());
         modelBuilder.ApplyConfiguration(new ServiceConfiguration());
-        modelBuilder.ApplyConfiguration(new UserConfiguration());
         modelBuilder.ApplyConfiguration(new RoleConfiguration());
     }
 }

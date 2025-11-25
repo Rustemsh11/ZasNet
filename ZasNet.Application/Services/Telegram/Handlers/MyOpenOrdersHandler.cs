@@ -1,13 +1,20 @@
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
+using System.Threading;
+using Telegram.Bot.Types;
 using ZasNet.Application.Repository;
+using ZasNet.Domain;
+using ZasNet.Domain.Entities;
 using ZasNet.Domain.Enums;
 using ZasNet.Domain.Interfaces;
 using ZasNet.Domain.Telegram;
 
 namespace ZasNet.Application.Services.Telegram.Handlers;
 
-public class MyOpenOrdersHandler(IRepositoryManager repositoryManager) : ITelegramMessageHandler
+public class MyOpenOrdersHandler(IRepositoryManager repositoryManager,
+    IFreeOrdersCache freeOrdersCache,
+    ITelegramBotAnswerService telegramBotAnswerService) : ITelegramMessageHandler
 {
 	private static readonly string CommandText = "Список моих открытых заявок";
 
@@ -22,12 +29,12 @@ public class MyOpenOrdersHandler(IRepositoryManager repositoryManager) : ITelegr
 			.FindByCondition(e => e.ChatId == telegramUpdate.Message.From.ChatId, false)
 			.SingleOrDefaultAsync(cancellationToken);
 
-		if (employee == null)
+		if (employee == null || employee.ChatId == null)
 		{
-			return new HandlerResult
+            await telegramBotAnswerService.SendMessageAsync(telegramUpdate.Message.From.ChatId, "Ваш чат не привязан к пользователю. Отправьте \"Логин:ваш_логин\".");
+            return new HandlerResult
 			{
 				Success = false,
-				ResponseMessage = "Ваш чат не привязан к пользователю. Отправьте \"Логин:ваш_логин\"."
 			};
 		}
 
@@ -37,29 +44,132 @@ public class MyOpenOrdersHandler(IRepositoryManager repositoryManager) : ITelegr
 				&& o.OrderServices.Any(os => os.OrderServiceEmployees.Any(ose => ose.EmployeeId == employee.Id)),
 				false)
 			.OrderByDescending(o => o.CreatedDate)
-			.Take(20)
 			.ToListAsync(cancellationToken);
 
 		if (orders.Count == 0)
 		{
-			return new HandlerResult
+            await telegramBotAnswerService.SendMessageAsync(employee.ChatId.Value, "У вас нет открытых заявок.");
+
+            return new HandlerResult
 			{
 				Success = true,
-				ResponseMessage = "У вас нет открытых заявок."
 			};
 		}
+        if (!freeOrdersCache.TryGet(employee.ChatId.Value, out var pages))
+        {
+            // Build cached pages (copy from FreeOrdersHandler to keep output consistent)
+            pages = new List<CachedOrderPage>(orders.Count);
+            foreach (var order in orders)
+            {
+                var serviesText = new StringBuilder();
+                var buttons = new List<Button>();
 
-		var sb = new StringBuilder();
-		sb.AppendLine("Мои открытые заявки:");
-		foreach (var o in orders)
-		{
-			sb.AppendLine($"#{o.Id} | {o.Client}, {o.AddressCity} {o.AddressStreet} {o.AddressNumber} | {o.Status} | {o.CreatedDate:dd.MM.yyyy}");
-		}
+                for (int i = 0; i < order.OrderServices.Count; i++)
+                {
+                    serviesText.AppendLine();
+
+                    var service = order.OrderServices.ElementAt(i);
+
+                    // Заголовок услуги
+                    serviesText.AppendLine($"🔧 Услуга {i + 1}: {service.Service.Name}");
+                    serviesText.AppendLine($"   💵 Цена: {service.Price:0.##} • 📦 Объем: {service.TotalVolume}");
+                    serviesText.AppendLine($"   🧮 Итого: {service.PriceTotal:0.##}");
+
+                    // Сотрудники
+                    var serviceEmployees = service.OrderServiceEmployees.Distinct().ToList();
+
+                    serviesText.AppendLine("👷 Сотрудники:");
+                    for (int k = 0; k < serviceEmployees.Count; k++)
+                    {
+                        if (serviceEmployees[k].Employee.Id == Constants.UnknowingEmployeeId)
+                        {
+                            serviesText.AppendLine($"   🆓 Свободно ({k + 1})");
+                            buttons.Add(new Button { Text = $"Взять услугу {i + 1}", CallbackData = $"order:{service.OrderId}:orderservice:{service.Id}" });
+                        }
+                        else
+                        {
+                            if (serviceEmployees[k].Employee.Id == employee.Id && !serviceEmployees[k].IsApproved)
+                            {
+                                serviesText.AppendLine($"   ❓ {serviceEmployees[k].Employee.Name}");
+                                buttons.Add(new Button { Text = $"Подтвердить услугу {i + 1}", CallbackData = $"approveorderservice:{serviceEmployees[k].Id}" });
+                            }
+                            else
+                            {
+                                serviesText.AppendLine($"   ✅ {serviceEmployees[k].Employee.Name}");
+                            }
+                        }
+                    }
+
+                    // Машины
+                    var orderServiceCars = service.OrderServiceCars.ToList();
+                    if (orderServiceCars.Count == 0)
+                    {
+                        serviesText.AppendLine("🚗 Машины: пока не назначены");
+                    }
+                    else
+                    {
+                        serviesText.AppendLine("🚗 Машины:");
+                        foreach (var car in orderServiceCars)
+                        {
+                            if (car.IsApproved)
+                            {
+                                serviesText.AppendLine($"  ✅ • {car.Car.CarModel.Name} ({car.Car.Number})");
+                            }
+                            else
+                            {
+                                serviesText.AppendLine($"  ❓ • {car.Car.CarModel.Name} ({car.Car.Number})");
+                            }
+                        }
+                    }
+
+                    // Разделитель между услугами
+                    serviesText.AppendLine("━━━━━━━━━━━━━━━━━━━━");
+                }
+
+
+                var sb = new StringBuilder();
+                sb.AppendLine("🆓 Свободная заявка");
+                sb.AppendLine($"🧑 Клиент: {order.Client}");
+                sb.AppendLine($"📍 Адрес: {order.AddressCity}, {order.AddressStreet} {order.AddressNumber}");
+                sb.AppendLine($"🗓️ Дата: {order.Date:dd.MM.yyyy HH:mm}");
+                sb.AppendLine();
+                sb.AppendLine("🧾 Услуги:");
+                sb.AppendLine(serviesText.ToString());
+                sb.AppendLine($"💰 Общая сумма: {order.OrderPriceAmount:0.##}");
+                sb.AppendLine($"💳 Оплата: {order.ClientType}");
+                if (order.ClientType == ClientType.FizNal)
+                {
+                    sb.AppendLine("‼️ Необходимо забрать оплату после выполнения!");
+                }
+
+                if (!string.IsNullOrWhiteSpace(order.Description))
+                {
+                    sb.AppendLine();
+                    sb.AppendLine("📝 Комментарий:");
+                    sb.AppendLine(order.Description);
+                }
+
+                pages.Add(new CachedOrderPage
+                {
+                    MessageText = sb.ToString(),
+                    Buttons = buttons
+                });
+            }
+
+            // cache for 10 minutes
+            freeOrdersCache.Set(employee.ChatId.Value, pages, TimeSpan.FromMinutes(10));
+        }
+    
+
+        var totalPages = Math.Max(1, pages.Count);
+        var currentPage = 1;
+        var pageIndex = 0;
+        var page = pages[pageIndex];
+        await telegramBotAnswerService.SendCachedFreeOrderPageAsync(employee.ChatId.Value, page.MessageText, page.Buttons, currentPage, totalPages, cancellationToken);
 
 		return new HandlerResult
 		{
 			Success = true,
-			ResponseMessage = sb.ToString()
 		};
 	}
 }

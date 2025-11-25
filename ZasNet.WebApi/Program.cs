@@ -74,6 +74,7 @@ builder.Services.AddScoped<ITelegramMessageHandler, MyOrdersForMonthHandler>();
 builder.Services.AddScoped<ITelegramMessageHandler, AssignEmployeeToOrderServiceEmployeeHandler>();
 builder.Services.AddScoped<ITelegramMessageHandler, ApproveAssinedNewOrderByEmployee>();
 builder.Services.AddScoped<ITelegramMessageHandler, RejectAssignedNewOrderByEmployee>();
+builder.Services.AddScoped<ITelegramMessageHandler, RefreshMenuHandler>();
 
 builder.Services.AddScoped<TelegramMessageProcessor>();
 

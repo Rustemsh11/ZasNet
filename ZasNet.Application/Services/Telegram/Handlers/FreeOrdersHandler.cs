@@ -66,10 +66,10 @@ public class FreeOrdersHandler(IRepositoryManager repositoryManager, ITelegramBo
 
 			if (orders.Count == 0)
 			{
-				return new HandlerResult
+                await telegramBotAnswerService.SendMessageAsync(chatId, "Свободных заявок нет.");
+                return new HandlerResult
 				{
 					Success = true,
-					ResponseMessage = "Свободных заявок нет."
 				};
 			}
 

@@ -2,7 +2,9 @@
 
 namespace ZasNet.Application.UseCases.Commands.Users.CreateUser;
 
-public record CreateUserRequest(
+public record CreateEmployeeRequest(
+        string Name,
+        string? Phone,
         string Login,
         string Password,
         int RoleId

@@ -19,7 +19,5 @@ public class Document : LockedItemBase
 
     public DocumentType DocumentType { get; set; }
 
-    public User? User { get; set; }
-
     public Order Order { get; set; }
 }

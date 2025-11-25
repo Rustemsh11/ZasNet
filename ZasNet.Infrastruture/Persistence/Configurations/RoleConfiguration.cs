@@ -21,6 +21,11 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
         {
             Id = 2,
             Name = "Диспетчер"
+        },
+        new Role()
+        {
+            Id = 3,
+            Name = "Водитель"
         });
     }
 }

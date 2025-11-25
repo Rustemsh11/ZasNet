@@ -1,10 +1,9 @@
-﻿using ZasNet.Application.Repository;
-using ZasNet.Domain.Interfaces;
+﻿using ZasNet.Domain.Interfaces;
 using ZasNet.Domain.Telegram;
 
 namespace ZasNet.Application.Services.Telegram.Handlers;
 
-public class StartCommandHandler : ITelegramMessageHandler
+public class StartCommandHandler(ITelegramBotAnswerService telegramBotAnswerService) : ITelegramMessageHandler
 {
     public bool CanHandle(TelegramUpdate telegramUpdate)
     {
@@ -13,9 +12,9 @@ public class StartCommandHandler : ITelegramMessageHandler
 
     public async Task<HandlerResult> HandleAsync(TelegramUpdate telegramUpdate, CancellationToken cancellationToken)
     {
+        await telegramBotAnswerService.SendMessageAsync(telegramUpdate.Message.From.ChatId, "Введите имя пользователя в виде \"Логин:\"[вашеимя]. Пример: Логин:bot");
         return new HandlerResult()
         {
-            ResponseMessage = "Введите имя пользователя в виде \"Логин:\"[вашеимя]. Пример: Логин:bot",
             Success = true,
         };
     }
