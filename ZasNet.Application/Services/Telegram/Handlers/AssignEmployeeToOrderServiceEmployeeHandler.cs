@@ -8,6 +8,12 @@ using ZasNet.Domain.Telegram;
 
 namespace ZasNet.Application.Services.Telegram.Handlers;
 
+/// <summary>
+/// При подтверждении через меню свободные заявки
+/// </summary>
+/// <param name="repositoryManager"></param>
+/// <param name="telegramBotAnswerService"></param>
+/// <param name="freeOrdersCache"></param>
 public class AssignEmployeeToOrderServiceEmployeeHandler(
 	IRepositoryManager repositoryManager,
 	ITelegramBotAnswerService telegramBotAnswerService,
@@ -79,7 +85,7 @@ public class AssignEmployeeToOrderServiceEmployeeHandler(
 
 						placeholder.EmployeeId = employee.Id;
 						placeholder.IsApproved = true;
-						await this.CheckAvailableToChangeOrderStatus(orderId, cancellationToken);
+						await this.CheckAvailableToChangeOrderStatus(orderId, placeholder.Id, cancellationToken);
                         await repositoryManager.OrderRepository.UnLockItem(orderId);
 						await repositoryManager.SaveAsync(cancellationToken);
                         await telegramBotAnswerService.SendMessageAsync(chatId, $"Заявка успешно принята", cancellationToken);
@@ -95,13 +101,17 @@ public class AssignEmployeeToOrderServiceEmployeeHandler(
 		return new HandlerResult { Success = false };
 	}
 
-	private async Task CheckAvailableToChangeOrderStatus(int orderId, CancellationToken cancellationToken)
+	private async Task CheckAvailableToChangeOrderStatus(int orderId, int approvedOrderServiceEmployeeId, CancellationToken cancellationToken)
 	{
 		var order = await repositoryManager.OrderRepository.FindByCondition(c => c.Id == orderId, true).SingleAsync(cancellationToken);
-		if(repositoryManager.OrderEmployeeRepository.FindByCondition(c=>c.OrderService.OrderId == orderId, false).All(c => c.IsApproved))
+		var anyNotApprovedExceptCurrent = await repositoryManager.OrderEmployeeRepository
+			.FindByCondition(c => c.OrderService.OrderId == orderId && c.Id != approvedOrderServiceEmployeeId && !c.IsApproved, false)
+			.AnyAsync(cancellationToken);
+
+		if (!anyNotApprovedExceptCurrent)
 		{
 			order.UpdateStatus(OrderStatus.ApprovedWithEmployers);
-        }
+		}
 	}
 
 	private async Task SendFirstPageAsync(long chatId, CancellationToken cancellationToken)

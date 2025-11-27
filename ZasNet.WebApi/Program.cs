@@ -113,6 +113,9 @@ builder.Services.AddCors(opt =>
         .AllowAnyMethod()
         .AllowAnyHeader());
 });
+
+// Background services
+builder.Services.AddHostedService<OrderAutoProcessingService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

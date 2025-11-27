@@ -4,9 +4,9 @@ public enum OrderStatus
 {
     Created = 0,
     ApprovedWithEmployers = 1,
-    Processing = 1,
-    Finished = 2,
-    CreatedInvoice = 3,
-    AwaitingPayment = 4,
-    Closed = 5,
+    Processing = 2,
+    Finished = 3,
+    CreatedInvoice = 4,
+    AwaitingPayment = 5,
+    Closed = 6,
 }
