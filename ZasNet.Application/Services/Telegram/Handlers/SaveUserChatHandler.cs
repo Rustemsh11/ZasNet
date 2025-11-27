@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Telegram.Bot.Types;
 using ZasNet.Application.Repository;
 using ZasNet.Domain.Interfaces;
 using ZasNet.Domain.Telegram;

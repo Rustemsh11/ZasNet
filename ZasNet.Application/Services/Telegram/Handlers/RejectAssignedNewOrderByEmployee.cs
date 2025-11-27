@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.Reflection.Metadata;
 using ZasNet.Application.Repository;
 using ZasNet.Domain;
 using ZasNet.Domain.Interfaces;
@@ -31,14 +30,26 @@ public class RejectAssignedNewOrderByEmployee(
         if (parts.Length == 2
             && int.TryParse(parts[1], out var orderServiceEmployeeId))
         {
-
             var serviceEmployee = await repositoryManager.OrderEmployeeRepository.FindByCondition(c => c.Id == orderServiceEmployeeId, true).Include(c=>c.OrderService).ThenInclude(c=>c.Service).SingleOrDefaultAsync(cancellationToken);
+
+            var lockedBy = await repositoryManager.OrderRepository.IsLockedBy(serviceEmployee.OrderService.OrderId);
+            if (lockedBy.HasValue)
+            {
+                var lockedEmployee = await repositoryManager.EmployeeRepository.FindByCondition(c => c.Id == lockedBy.Value, false).Select(c => c.Name).SingleOrDefaultAsync(cancellationToken);
+                await telegramBotAnswerService.SendMessageAsync(chatId, $"Заявку редактирует {lockedEmployee}. Через некоторое время обновите список заявок и повторите операцию", cancellationToken);
+                return new HandlerResult()
+                {
+                    Success = true,
+                };
+            }
 
             if (serviceEmployee != null)
             {
+                await repositoryManager.OrderRepository.LockItem(serviceEmployee.OrderService.OrderId, serviceEmployee.EmployeeId);
                 serviceEmployee.EmployeeId = Constants.UnknowingEmployeeId;
                 serviceEmployee.IsApproved = false;
                 await repositoryManager.SaveAsync(cancellationToken);
+                await repositoryManager.OrderRepository.UnLockItem(serviceEmployee.OrderService.OrderId);
                 await telegramBotAnswerService.SendMessageAsync(chatId, $"Услуга:[{serviceEmployee.OrderService.Service.Name}] успешно отменено");
             }
             else

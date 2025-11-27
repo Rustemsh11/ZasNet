@@ -3,6 +3,7 @@
 public enum OrderStatus
 {
     Created = 0,
+    ApprovedWithEmployers = 1,
     Processing = 1,
     Finished = 2,
     CreatedInvoice = 3,

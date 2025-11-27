@@ -79,9 +79,9 @@ public class AssignEmployeeToOrderServiceEmployeeHandler(
 
 						placeholder.EmployeeId = employee.Id;
 						placeholder.IsApproved = true;
-
-						await repositoryManager.SaveAsync(cancellationToken);
+						await this.CheckAvailableToChangeOrderStatus(orderId, cancellationToken);
                         await repositoryManager.OrderRepository.UnLockItem(orderId);
+						await repositoryManager.SaveAsync(cancellationToken);
                         await telegramBotAnswerService.SendMessageAsync(chatId, $"Заявка успешно принята", cancellationToken);
                     }
 				}
@@ -93,6 +93,15 @@ public class AssignEmployeeToOrderServiceEmployeeHandler(
 		await SendFirstPageAsync(chatId, cancellationToken);
 
 		return new HandlerResult { Success = false };
+	}
+
+	private async Task CheckAvailableToChangeOrderStatus(int orderId, CancellationToken cancellationToken)
+	{
+		var order = await repositoryManager.OrderRepository.FindByCondition(c => c.Id == orderId, true).SingleAsync(cancellationToken);
+		if(repositoryManager.OrderEmployeeRepository.FindByCondition(c=>c.OrderService.OrderId == orderId, false).All(c => c.IsApproved))
+		{
+			order.UpdateStatus(OrderStatus.ApprovedWithEmployers);
+        }
 	}
 
 	private async Task SendFirstPageAsync(long chatId, CancellationToken cancellationToken)
@@ -131,30 +140,30 @@ public class AssignEmployeeToOrderServiceEmployeeHandler(
 					var service = order.OrderServices.ElementAt(i);
 
 					// Заголовок услуги
-					serviesText.AppendLine($"🔧 Услуга {i + 1}: {service.Service.Name}");
-					serviesText.AppendLine($"   💵 Цена: {service.Price:0.##} • 📦 Объем: {service.TotalVolume}");
-					serviesText.AppendLine($"   🧮 Итого: {service.PriceTotal:0.##}");
+					serviesText.AppendLine($"	🔧 Услуга {i + 1}: {service.Service.Name}");
+					serviesText.AppendLine($"		💵 Цена: {service.Price:0.##} • 📦 Объем: {service.TotalVolume}");
+					serviesText.AppendLine($"		🧮 Итого: {service.PriceTotal:0.##}");
 
 					// Сотрудники
 					var serviceEmployees = service.OrderServiceEmployees.Distinct().ToList();
 					
-					serviesText.AppendLine("👷 Сотрудники:");
+					serviesText.AppendLine("	👷 Сотрудники:");
 					for (int k = 0; k < serviceEmployees.Count; k++)
 					{
 						if (serviceEmployees[k].Employee.Id == Constants.UnknowingEmployeeId)
 						{
-							serviesText.AppendLine($"   🆓 Свободно ({k + 1})");
+							serviesText.AppendLine($"		🆓 Свободно ({k + 1})");
 							buttons.Add(new Button { Text = $"Взять услугу {i + 1}", CallbackData = $"order:{service.OrderId}:orderservice:{service.Id}" });
 						}
 						else
 						{
                             if (serviceEmployees[k].IsApproved)
                             {
-                                serviesText.AppendLine($"   ✅ {serviceEmployees[k].Employee.Name}");
+                                serviesText.AppendLine($"		✅ {serviceEmployees[k].Employee.Name}");
                             }
                             else
                             {
-                                serviesText.AppendLine($"   ❓ {serviceEmployees[k].Employee.Name}");
+                                serviesText.AppendLine($"		❓ {serviceEmployees[k].Employee.Name}");
                             }
 						}
 					}
@@ -163,20 +172,20 @@ public class AssignEmployeeToOrderServiceEmployeeHandler(
 					var orderServiceCars = service.OrderServiceCars.ToList();
 					if (orderServiceCars.Count == 0)
 					{
-						serviesText.AppendLine("🚗 Машины: пока не назначены");
+						serviesText.AppendLine("	🚗 Машины: пока не назначены");
 					}
 					else
 					{
-						serviesText.AppendLine("🚗 Машины:");
+						serviesText.AppendLine("	🚗 Машины:");
 						foreach (var car in orderServiceCars)
 						{
                             if (car.IsApproved)
                             {
-                                serviesText.AppendLine($"  ✅ • {car.Car.CarModel.Name} ({car.Car.Number})");
+                                serviesText.AppendLine($"		✅ • {car.Car.CarModel.Name} ({car.Car.Number})");
                             }
                             else
                             {
-                                serviesText.AppendLine($"  ❓ • {car.Car.CarModel.Name} ({car.Car.Number})");
+                                serviesText.AppendLine($"		❓ • {car.Car.CarModel.Name} ({car.Car.Number})");
                             }
                         }
 					}

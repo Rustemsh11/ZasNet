@@ -87,36 +87,36 @@ public class FreeOrdersHandler(IRepositoryManager repositoryManager, ITelegramBo
 					var service = order.OrderServices.ElementAt(i);
 
 					// Заголовок услуги
-					serviesText.AppendLine($"🔧 Услуга {i + 1}: {service.Service.Name}");
-					serviesText.AppendLine($"   💵 Цена: {service.Price:0.##} • 📦 Объем: {service.TotalVolume}");
-					serviesText.AppendLine($"   🧮 Итого: {service.PriceTotal:0.##}");
+					serviesText.AppendLine($"	🔧 Услуга {i + 1}: {service.Service.Name}");
+					serviesText.AppendLine($"		💵 Цена: {service.Price:0.##} • 📦 Объем: {service.TotalVolume}");
+					serviesText.AppendLine($"		🧮 Итого: {service.PriceTotal:0.##}");
 
 					// Сотрудники
 					var serviceEmployees = service.OrderServiceEmployees.Distinct().ToList();
 					if (serviceEmployees.Count == 0)
 					{
-						serviesText.AppendLine("👷 Сотрудники: пока не назначены");
+						serviesText.AppendLine("	👷 Сотрудники: пока не назначены");
 						buttons.Add(new Button { Text = $"Взять услугу {i + 1}", CallbackData = $"order:{service.OrderId}:orderservice:{service.Id}" });
 					}
 					else
 					{
-						serviesText.AppendLine("👷 Сотрудники:");
+						serviesText.AppendLine("	👷 Сотрудники:");
 						for (int k = 0; k < serviceEmployees.Count; k++)
 						{
 							if (serviceEmployees[k].Employee.Id == Constants.UnknowingEmployeeId)
 							{
-								serviesText.AppendLine($"   🆓 Свободно ({k + 1})");
+								serviesText.AppendLine($"		🆓 Свободно ({k + 1})");
 								buttons.Add(new Button { Text = $"Взять услугу {i + 1}", CallbackData = $"order:{service.OrderId}:orderservice:{service.Id}" });
 							}
 							else
 							{
 								if (serviceEmployees[k].IsApproved)
 								{
-									serviesText.AppendLine($"   ✅ {serviceEmployees[k].Employee.Name}");
+									serviesText.AppendLine($"		✅ {serviceEmployees[k].Employee.Name}");
 								}
 								else
 								{
-                                    serviesText.AppendLine($"   ❓ {serviceEmployees[k].Employee.Name}");
+                                    serviesText.AppendLine($"		❓ {serviceEmployees[k].Employee.Name}");
                                 }
 							}
 						}
@@ -126,20 +126,20 @@ public class FreeOrdersHandler(IRepositoryManager repositoryManager, ITelegramBo
 					var orderServiceCars = service.OrderServiceCars.ToList();
 					if (orderServiceCars.Count == 0)
 					{
-						serviesText.AppendLine("🚗 Машины: пока не назначены");
+						serviesText.AppendLine("	🚗 Машины: пока не назначены");
 					}
 					else
 					{
-						serviesText.AppendLine("🚗 Машины:");
+						serviesText.AppendLine("	🚗 Машины:");
 						foreach (var car in orderServiceCars)
 						{
 							if (car.IsApproved)
 							{
-								serviesText.AppendLine($"  ✅ • {car.Car.CarModel.Name} ({car.Car.Number})");
+								serviesText.AppendLine($"		✅ • {car.Car.CarModel.Name} ({car.Car.Number})");
 							}
 							else
 							{
-                                serviesText.AppendLine($"  ❓ • {car.Car.CarModel.Name} ({car.Car.Number})");
+                                serviesText.AppendLine($"		❓ • {car.Car.CarModel.Name} ({car.Car.Number})");
                             }
 						}
 					}

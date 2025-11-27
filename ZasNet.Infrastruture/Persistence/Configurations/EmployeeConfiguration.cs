@@ -21,6 +21,8 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
         {
             Id = 1,
             Name = "Не известно",
+            Login = "unknown",
+            Password = "changeme",
             RoleId = 3,
         });
     }

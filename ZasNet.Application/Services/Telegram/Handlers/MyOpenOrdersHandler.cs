@@ -1,11 +1,7 @@
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
-using System.Threading;
-using Telegram.Bot.Types;
 using ZasNet.Application.Repository;
 using ZasNet.Domain;
-using ZasNet.Domain.Entities;
 using ZasNet.Domain.Enums;
 using ZasNet.Domain.Interfaces;
 using ZasNet.Domain.Telegram;
@@ -25,8 +21,16 @@ public class MyOpenOrdersHandler(IRepositoryManager repositoryManager,
 
 	public async Task<HandlerResult> HandleAsync(TelegramUpdate telegramUpdate, CancellationToken cancellationToken)
 	{
-		var employee = await repositoryManager.EmployeeRepository
-			.FindByCondition(e => e.ChatId == telegramUpdate.Message.From.ChatId, false)
+        long chatId = telegramUpdate.Message?.From.ChatId ?? telegramUpdate.CallbackQuery!.From!.ChatId;
+
+        // On explicit command press, reset cache to force fresh load
+        if (telegramUpdate.Message?.Text == CommandText)
+        {
+            freeOrdersCache.Invalidate(chatId);
+        }
+
+        var employee = await repositoryManager.EmployeeRepository
+			.FindByCondition(e => e.ChatId == chatId, false)
 			.SingleOrDefaultAsync(cancellationToken);
 
 		if (employee == null || employee.ChatId == null)
@@ -43,7 +47,10 @@ public class MyOpenOrdersHandler(IRepositoryManager repositoryManager,
 				o.Status != OrderStatus.Closed
 				&& o.OrderServices.Any(os => os.OrderServiceEmployees.Any(ose => ose.EmployeeId == employee.Id)),
 				false)
-			.OrderByDescending(o => o.CreatedDate)
+            .Include(o => o.OrderServices).ThenInclude(os => os.Service)
+            .Include(o => o.OrderServices).ThenInclude(os => os.OrderServiceEmployees).ThenInclude(ose => ose.Employee)
+            .Include(o => o.OrderServices).ThenInclude(os => os.OrderServiceCars).ThenInclude(osc => osc.Car).ThenInclude(c => c.CarModel)
+            .OrderByDescending(o => o.Date)
 			.ToListAsync(cancellationToken);
 
 		if (orders.Count == 0)
@@ -61,9 +68,9 @@ public class MyOpenOrdersHandler(IRepositoryManager repositoryManager,
             pages = new List<CachedOrderPage>(orders.Count);
             foreach (var order in orders)
             {
+                bool currentUserCanApproveCar = false;
                 var serviesText = new StringBuilder();
                 var buttons = new List<Button>();
-
                 for (int i = 0; i < order.OrderServices.Count; i++)
                 {
                     serviesText.AppendLine();
@@ -71,31 +78,36 @@ public class MyOpenOrdersHandler(IRepositoryManager repositoryManager,
                     var service = order.OrderServices.ElementAt(i);
 
                     // Заголовок услуги
-                    serviesText.AppendLine($"🔧 Услуга {i + 1}: {service.Service.Name}");
-                    serviesText.AppendLine($"   💵 Цена: {service.Price:0.##} • 📦 Объем: {service.TotalVolume}");
-                    serviesText.AppendLine($"   🧮 Итого: {service.PriceTotal:0.##}");
+                    serviesText.AppendLine($"   🔧 Услуга {i + 1}: {service.Service.Name}");
+                    serviesText.AppendLine($"       💵 Цена: {service.Price:0.##} • 📦 Объем: {service.TotalVolume}");
+                    serviesText.AppendLine($"       🧮 Итого: {service.PriceTotal:0.##}");
 
                     // Сотрудники
                     var serviceEmployees = service.OrderServiceEmployees.Distinct().ToList();
 
-                    serviesText.AppendLine("👷 Сотрудники:");
+                    serviesText.AppendLine("    👷 Сотрудники:");
                     for (int k = 0; k < serviceEmployees.Count; k++)
                     {
                         if (serviceEmployees[k].Employee.Id == Constants.UnknowingEmployeeId)
                         {
-                            serviesText.AppendLine($"   🆓 Свободно ({k + 1})");
-                            buttons.Add(new Button { Text = $"Взять услугу {i + 1}", CallbackData = $"order:{service.OrderId}:orderservice:{service.Id}" });
+                            serviesText.AppendLine($"       🆓 Свободно ({k + 1})");
+                            buttons.Add(new Button { Text = $"✅ услугу {i + 1}", CallbackData = $"order:{service.OrderId}:orderservice:{service.Id}" });
                         }
                         else
                         {
+                            if (serviceEmployees[k].Employee.Id == employee.Id)
+                            {
+                                currentUserCanApproveCar = true;
+                            }
+
                             if (serviceEmployees[k].Employee.Id == employee.Id && !serviceEmployees[k].IsApproved)
                             {
-                                serviesText.AppendLine($"   ❓ {serviceEmployees[k].Employee.Name}");
-                                buttons.Add(new Button { Text = $"Подтвердить услугу {i + 1}", CallbackData = $"approveorderservice:{serviceEmployees[k].Id}" });
+                                serviesText.AppendLine($"       ❓ {serviceEmployees[k].Employee.Name}");
+                                buttons.Add(new Button { Text = $"✅ услугу {i + 1}", CallbackData = $"approveorderservice:{serviceEmployees[k].Id}" });
                             }
                             else
                             {
-                                serviesText.AppendLine($"   ✅ {serviceEmployees[k].Employee.Name}");
+                                serviesText.AppendLine($"       ✅ {serviceEmployees[k].Employee.Name}");
                             }
                         }
                     }
@@ -104,31 +116,38 @@ public class MyOpenOrdersHandler(IRepositoryManager repositoryManager,
                     var orderServiceCars = service.OrderServiceCars.ToList();
                     if (orderServiceCars.Count == 0)
                     {
-                        serviesText.AppendLine("🚗 Машины: пока не назначены");
+                        serviesText.AppendLine("    🚗 Машины: пока не назначены");
                     }
                     else
                     {
-                        serviesText.AppendLine("🚗 Машины:");
+                        serviesText.AppendLine("    🚗 Машины:");
                         foreach (var car in orderServiceCars)
                         {
                             if (car.IsApproved)
                             {
-                                serviesText.AppendLine($"  ✅ • {car.Car.CarModel.Name} ({car.Car.Number})");
+                                serviesText.AppendLine($"       ✅ • {car.Car.CarModel.Name} ({car.Car.Number})");
                             }
                             else
                             {
-                                serviesText.AppendLine($"  ❓ • {car.Car.CarModel.Name} ({car.Car.Number})");
+                                serviesText.AppendLine($"       ❓ • {car.Car.CarModel.Name} ({car.Car.Number})");
                             }
                         }
+
                     }
 
                     // Разделитель между услугами
                     serviesText.AppendLine("━━━━━━━━━━━━━━━━━━━━");
                 }
 
+                if (currentUserCanApproveCar)
+                {
+                    buttons.Add(new Button { Text = $"✅ машины на выезд", CallbackData = $"approveorderservicecar:{order.Id}" });
+                    buttons.Add(new Button { Text = $"🔄 машины на выезд", CallbackData = $"changeorderservicecar:{order.Id}" });
+                }
+
 
                 var sb = new StringBuilder();
-                sb.AppendLine("🆓 Свободная заявка");
+                sb.AppendLine("🅼🆈 Моя заявка");
                 sb.AppendLine($"🧑 Клиент: {order.Client}");
                 sb.AppendLine($"📍 Адрес: {order.AddressCity}, {order.AddressStreet} {order.AddressNumber}");
                 sb.AppendLine($"🗓️ Дата: {order.Date:dd.MM.yyyy HH:mm}");
