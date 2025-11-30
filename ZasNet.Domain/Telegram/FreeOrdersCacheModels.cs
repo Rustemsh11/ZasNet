@@ -4,6 +4,7 @@ public class Button
 {
     public string Text { get; set; } = string.Empty;
     public string CallbackData { get; set; } = string.Empty;
+    public string? Url { get; set; }
 }
 
 public class CachedOrderPage

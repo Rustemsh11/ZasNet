@@ -1,11 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
-using ZasNet.Application.Repository;
-using ZasNet.Domain.Interfaces;
+﻿using ZasNet.Domain.Interfaces;
 using ZasNet.Domain.Telegram;
 
 namespace ZasNet.Application.Services.Telegram.Handlers;
 
-public class ApproveAssinedNewOrderByEmployee(IRepositoryManager repositoryManager, ITelegramBotAnswerService telegramBotAnswerService) : ITelegramMessageHandler
+public class ApproveAssinedNewOrderByEmployee(IOrderServiceEmployeeApprovalService approvalService, ITelegramBotAnswerService telegramBotAnswerService) : ITelegramMessageHandler
 {
     public bool CanHandle(TelegramUpdate telegramUpdate)
     {
@@ -27,32 +25,10 @@ public class ApproveAssinedNewOrderByEmployee(IRepositoryManager repositoryManag
         if (parts.Length == 2
             && int.TryParse(parts[1], out var orderServiceEmployeeId))
         {
-            var serviceEmployee = await repositoryManager.OrderEmployeeRepository.FindByCondition(c => c.Id == orderServiceEmployeeId, true).Include(c => c.OrderService).ThenInclude(c => c.Service).SingleOrDefaultAsync(cancellationToken);
-            var lockedBy = await repositoryManager.OrderRepository.IsLockedBy(serviceEmployee.OrderService.OrderId);
-
-            if (lockedBy.HasValue)
+            var result = await approvalService.ApproveAssignedAsync(orderServiceEmployeeId, cancellationToken);
+            if (!string.IsNullOrWhiteSpace(result.Message))
             {
-                var lockedEmployee = await repositoryManager.EmployeeRepository.FindByCondition(c => c.Id == lockedBy.Value, false).Select(c => c.Name).SingleOrDefaultAsync(cancellationToken);
-                await telegramBotAnswerService.SendMessageAsync(chatId, $"Заявку редактирует {lockedEmployee}. Через некоторое время обновите список заявок и повторите операцию", cancellationToken);
-                return new HandlerResult()
-                {
-                    Success = true,
-                };
-            }
-
-            if (serviceEmployee != null)
-            {
-                await repositoryManager.OrderRepository.LockItem(serviceEmployee.OrderService.OrderId, serviceEmployee.EmployeeId);
-                
-                serviceEmployee.IsApproved = true;
-                await repositoryManager.SaveAsync(cancellationToken);
-                await telegramBotAnswerService.SendMessageAsync(chatId, $"Услуга:[{serviceEmployee.OrderService.Service.Name}] успешно подтверждено");
-                
-                await repositoryManager.OrderRepository.UnLockItem(serviceEmployee.OrderService.OrderId);
-            }
-            else
-            {
-                await telegramBotAnswerService.SendMessageAsync(chatId, $"Не удалось подтвердить услугу:[{serviceEmployee.OrderService.Service.Name}]. Привязанного сотрудника к этой услуге не найдено.");
+                await telegramBotAnswerService.SendMessageAsync(chatId, result.Message, cancellationToken);
             }
         }
 

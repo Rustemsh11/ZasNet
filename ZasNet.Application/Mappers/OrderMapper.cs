@@ -22,7 +22,8 @@ public class OrderMapper: Profile
                             Id =x.EmployeeId,
                             Name = x.Employee.Name,
                         },
-                        OrderServiceId = c.Id
+                        OrderServiceId = c.Id,
+                        IsApproved = x.IsApproved,
                     }).ToList(),
                     c.OrderServiceCars.Select(x => new OrderServiceCarDto()
                     {
@@ -31,11 +32,13 @@ public class OrderMapper: Profile
                             Id =x.CarId,
                             Name = $"{x.Car.CarModel.Name}({x.Car.Number})",
                         },
-                        OrderServiceId = c.Id
+                        OrderServiceId = c.Id,
+                        IsApproved = x.IsApproved,
                     }).ToList()))));;
 
         CreateMap<OrderDto, Order.UpsertOrderDto>()
             .ForMember(c=>c.CreatedEmployeeId, c=>c.MapFrom(src=> src.CreatedUser.Id))
+            .ForMember(c=>c.Status, c=>c.MapFrom(src=> src.Status))
             .ForMember(c=>c.OrderServices, c=>c.MapFrom(src=>
                 src.OrderServicesDtos.Select(c=> new OrderService() 
                 { 
@@ -49,12 +52,14 @@ public class OrderMapper: Profile
                     OrderServiceCars = c.OrderServiceCarDtos.Select(c=> new OrderServiceCar()
                     {
                         OrderServiceId = c.OrderServiceId,
-                        CarId = c.Car.Id
+                        CarId = c.Car.Id,
+                        IsApproved = c.IsApproved,
                     }).ToList(),
                     OrderServiceEmployees = c.OrderServiceEmployeeDtos.Select(c=> new OrderServiceEmployee()
                     {
                         OrderServiceId = c.OrderServiceId,
-                        EmployeeId = c.Employee.Id
+                        EmployeeId = c.Employee.Id,
+                        IsApproved= c.IsApproved,
                     }).ToList()
                 })));
     }

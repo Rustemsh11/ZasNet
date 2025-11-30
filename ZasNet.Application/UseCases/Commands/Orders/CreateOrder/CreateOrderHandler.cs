@@ -22,13 +22,15 @@ public class CreateOrderHandler(
             OrderServiceCars = c.OrderServiceCarDtos
                 .Select(x => new OrderServiceCar
                 {
-                    CarId = x.Car.Id
+                    CarId = x.Car.Id,
+                    IsApproved = x.IsApproved,
                 })
                 .ToList(),
             OrderServiceEmployees = c.OrderServiceEmployeeDtos
                 .Select(x => new OrderServiceEmployee
                 {
-                    EmployeeId = x.Employee.Id
+                    EmployeeId = x.Employee.Id,
+                    IsApproved = x.IsApproved,
                 })
                 .ToList(),
         }).ToList();
@@ -46,6 +48,7 @@ public class CreateOrderHandler(
             PaymentType = request.OrderDto.PaymentType,
             Description = request.OrderDto.Description,
             OrderServices = orderServices,
+            Status = request.OrderDto.Status,
             ClientType = request.OrderDto.ClientType,
             CreatedEmployeeId = request.OrderDto.CreatedUser.Id,
         });

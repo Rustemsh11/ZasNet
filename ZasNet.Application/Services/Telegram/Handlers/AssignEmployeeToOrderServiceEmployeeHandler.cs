@@ -17,7 +17,8 @@ namespace ZasNet.Application.Services.Telegram.Handlers;
 public class AssignEmployeeToOrderServiceEmployeeHandler(
 	IRepositoryManager repositoryManager,
 	ITelegramBotAnswerService telegramBotAnswerService,
-	IFreeOrdersCache freeOrdersCache) : ITelegramMessageHandler
+	IFreeOrdersCache freeOrdersCache,
+    IOrderServiceEmployeeApprovalService approvalService) : ITelegramMessageHandler
 {
 	public bool CanHandle(TelegramUpdate telegramUpdate)
 	{
@@ -46,12 +47,19 @@ public class AssignEmployeeToOrderServiceEmployeeHandler(
 			var employee = await repositoryManager.EmployeeRepository
 				.FindByCondition(e => e.ChatId == chatId, true)
 				.SingleOrDefaultAsync(cancellationToken);
+            
+			var order = await repositoryManager.OrderRepository
+            .FindByCondition(c => c.Id == orderId, true)
+            .SingleAsync(cancellationToken);
+            if (order.Status != OrderStatus.Created)
+            {
+                await telegramBotAnswerService.SendMessageAsync(chatId, $"Данная заявка не в статусе создан", cancellationToken);
+            }
+            var lockedBy = order.IsLocked;
 
-			var lockedBy = await repositoryManager.OrderRepository.IsLockedBy(orderId);
-
-            if (lockedBy.HasValue)
+            if (lockedBy)
 			{
-				var lockedEmployee = await repositoryManager.EmployeeRepository.FindByCondition(c=>c.Id == lockedBy.Value, false).Select(c=>c.Name).SingleOrDefaultAsync(cancellationToken);
+				var lockedEmployee = await repositoryManager.EmployeeRepository.FindByCondition(c=>c.Id == order.LockedByUserId, false).Select(c=>c.Name).SingleOrDefaultAsync(cancellationToken);
 				await telegramBotAnswerService.SendMessageAsync(chatId, $"Заявку редактирует {lockedEmployee}. Через некоторое время обновите список заявок и повторите операцию", cancellationToken);
 				return new HandlerResult()
 				{
@@ -59,39 +67,47 @@ public class AssignEmployeeToOrderServiceEmployeeHandler(
 				};
 			}
 
-			await repositoryManager.OrderRepository.LockItem(orderId, employee.Id);
+			await repositoryManager.OrderRepository.LockItem(order.Id, employee.Id);
 
-			if (employee != null)
+			try
 			{
-				// Load target order service with employees
-				var orderService = await repositoryManager.OrderServiceRepository
-					.FindByCondition(os => os.Id == orderServiceId && os.OrderId == orderId, true)
-					.Include(os => os.OrderServiceEmployees)
-					.SingleOrDefaultAsync(cancellationToken);
-
-				if (orderService != null)
+				if (employee != null)
 				{
-					// Skip if already assigned
-					if (!orderService.OrderServiceEmployees.Any(ose => ose.EmployeeId == employee.Id))
+					// Load target order service with employees
+					var orderService = await repositoryManager.OrderServiceRepository
+						.FindByCondition(os => os.Id == orderServiceId && os.OrderId == orderId, true)
+						.Include(os => os.OrderServiceEmployees)
+						.SingleOrDefaultAsync(cancellationToken);
+
+					if (orderService != null)
 					{
-						var placeholder = orderService.OrderServiceEmployees
-							.FirstOrDefault(ose => ose.EmployeeId == Constants.UnknowingEmployeeId);
-
-						if(placeholder == null)
+						// Skip if already assigned
+						if (!orderService.OrderServiceEmployees.Any(ose => ose.EmployeeId == employee.Id))
 						{
-                            await telegramBotAnswerService.SendMessageAsync(chatId, $"Заявка уже принята другим сотрудником. Пожалуйста, обновите список", cancellationToken);
-                            return new HandlerResult { Success = false };
-                        }
+							var placeholder = orderService.OrderServiceEmployees
+								.FirstOrDefault(ose => ose.EmployeeId == Constants.UnknowingEmployeeId);
 
-						placeholder.EmployeeId = employee.Id;
-						placeholder.IsApproved = true;
-						await this.CheckAvailableToChangeOrderStatus(orderId, placeholder.Id, cancellationToken);
-                        await repositoryManager.OrderRepository.UnLockItem(orderId);
-						await repositoryManager.SaveAsync(cancellationToken);
-                        await telegramBotAnswerService.SendMessageAsync(chatId, $"Заявка успешно принята", cancellationToken);
-                    }
+							if(placeholder == null)
+							{
+								await telegramBotAnswerService.SendMessageAsync(chatId, $"Заявка уже принята другим сотрудником. Пожалуйста, обновите список", cancellationToken);
+								return new HandlerResult { Success = false };
+							}
+
+							placeholder.EmployeeId = employee.Id;
+							placeholder.IsApproved = true;
+							await approvalService.UpdateOrderStatusAfterEmployeeApprovalAsync(orderId, placeholder.Id, cancellationToken);
+							await repositoryManager.SaveAsync(cancellationToken);
+						}
+					}
 				}
 			}
+			finally
+			{
+                await repositoryManager.OrderRepository.UnLockItem(orderId);
+			}
+			
+			await telegramBotAnswerService.SendMessageAsync(chatId, $"Заявка успешно принята", cancellationToken);
+
 		}
 
 		// Invalidate cache to reflect changes and rebuild/send page 1
@@ -99,19 +115,6 @@ public class AssignEmployeeToOrderServiceEmployeeHandler(
 		await SendFirstPageAsync(chatId, cancellationToken);
 
 		return new HandlerResult { Success = false };
-	}
-
-	private async Task CheckAvailableToChangeOrderStatus(int orderId, int approvedOrderServiceEmployeeId, CancellationToken cancellationToken)
-	{
-		var order = await repositoryManager.OrderRepository.FindByCondition(c => c.Id == orderId, true).SingleAsync(cancellationToken);
-		var anyNotApprovedExceptCurrent = await repositoryManager.OrderEmployeeRepository
-			.FindByCondition(c => c.OrderService.OrderId == orderId && c.Id != approvedOrderServiceEmployeeId && !c.IsApproved, false)
-			.AnyAsync(cancellationToken);
-
-		if (!anyNotApprovedExceptCurrent)
-		{
-			order.UpdateStatus(OrderStatus.ApprovedWithEmployers);
-		}
 	}
 
 	private async Task SendFirstPageAsync(long chatId, CancellationToken cancellationToken)

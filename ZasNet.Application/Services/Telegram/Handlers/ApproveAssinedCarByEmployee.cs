@@ -29,37 +29,43 @@ namespace ZasNet.Application.Services.Telegram.Handlers
             {
                 var lockedBy = await repositoryManager.OrderRepository.IsLockedBy(orderId);
 
-                if (lockedBy.HasValue)
+                try
                 {
-                    var lockedEmployee = await repositoryManager.EmployeeRepository.FindByCondition(c => c.Id == lockedBy.Value, false).Select(c => c.Name).SingleOrDefaultAsync(cancellationToken);
-                    await telegramBotAnswerService.SendMessageAsync(chatId, $"Заявку редактирует {lockedEmployee}. Через некоторое время обновите список заявок и повторите операцию", cancellationToken);
-                    return new HandlerResult()
+                    if (lockedBy.HasValue)
                     {
-                        Success = true,
-                    };
-                }
-
-                var serviceCars = await repositoryManager.OrderCarRepository.FindByCondition(c => c.OrderService.OrderId == orderId, true)
-                    .Include(c => c.OrderService).ThenInclude(c => c.Service)
-                    .Include(c=>c.Car)
-                    .ToListAsync(cancellationToken);
-                var employeeId = await repositoryManager.EmployeeRepository.FindByCondition(c => c.ChatId == chatId, false).Select(c=>c.Id).SingleOrDefaultAsync(cancellationToken);
-                if (employeeId != 0)
-                {
-                    await repositoryManager.OrderRepository.LockItem(orderId, employeeId);
-                }
-                
-                foreach (var serviceCar in serviceCars)
-                {
-                    if (serviceCar != null)
-                    {
-                        serviceCar.IsApproved = true;
+                        var lockedEmployee = await repositoryManager.EmployeeRepository.FindByCondition(c => c.Id == lockedBy.Value, false).Select(c => c.Name).SingleOrDefaultAsync(cancellationToken);
+                        await telegramBotAnswerService.SendMessageAsync(chatId, $"Заявку редактирует {lockedEmployee}. Через некоторое время обновите список заявок и повторите операцию", cancellationToken);
+                        return new HandlerResult()
+                        {
+                            Success = true,
+                        };
                     }
-                }
 
-                await repositoryManager.SaveAsync(cancellationToken);
-                await repositoryManager.OrderRepository.UnLockItem(orderId);
-                await telegramBotAnswerService.SendMessageAsync(chatId, $"Выездные машины:[{string.Join(", ", serviceCars.Select(c=>c.Car.Number))}] успешно подтверждены");
+                    var serviceCars = await repositoryManager.OrderCarRepository.FindByCondition(c => c.OrderService.OrderId == orderId, true)
+                        .Include(c => c.OrderService).ThenInclude(c => c.Service)
+                        .Include(c=>c.Car)
+                        .ToListAsync(cancellationToken);
+                    var employeeId = await repositoryManager.EmployeeRepository.FindByCondition(c => c.ChatId == chatId, false).Select(c=>c.Id).SingleOrDefaultAsync(cancellationToken);
+                    if (employeeId != 0)
+                    {
+                        await repositoryManager.OrderRepository.LockItem(orderId, employeeId);
+                    }
+                
+                    foreach (var serviceCar in serviceCars)
+                    {
+                        if (serviceCar != null)
+                        {
+                            serviceCar.IsApproved = true;
+                        }
+                    }
+
+                    await repositoryManager.SaveAsync(cancellationToken);
+                    await telegramBotAnswerService.SendMessageAsync(chatId, $"Выездные машины:[{string.Join(", ", serviceCars.Select(c=>c.Car.Number))}] успешно подтверждены");
+                }
+                finally
+                {
+                    await repositoryManager.OrderRepository.UnLockItem(orderId);
+                }
             }
 
             return new HandlerResult()

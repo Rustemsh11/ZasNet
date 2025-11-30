@@ -22,7 +22,7 @@ public class OrderDto
 
     public ClientType ClientType { get; set; }
 
-    public OrderStatus OrderStatus { get; set; }
+    public OrderStatus Status { get; set; }
 
     public string? Description { get; set; }
 

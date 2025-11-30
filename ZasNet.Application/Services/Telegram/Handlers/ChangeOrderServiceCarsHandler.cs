@@ -1,9 +1,7 @@
 ﻿using ZasNet.Application.Repository;
 using Microsoft.EntityFrameworkCore;
-using ZasNet.Domain.Entities;
 using ZasNet.Domain.Interfaces;
 using ZasNet.Domain.Telegram;
-using Microsoft.AspNetCore.Localization;
 
 namespace ZasNet.Application.Services.Telegram.Handlers;
 
@@ -77,21 +75,29 @@ public class ChangeOrderServiceCarsHandler(IRepositoryManager repositoryManager,
 						await repositoryManager.OrderRepository.LockItem(orderId, employee.Id);
 					}
 
-					var orderServiceCar = await repositoryManager.OrderCarRepository.FindByCondition(c => c.Id == servicecarsId, true).SingleOrDefaultAsync(cancellationToken);
-
-					if (orderServiceCar != null)
+					try
 					{
-						// replace current selection with chosen car (single car per service for this flow)
-						orderServiceCar.CarId = carId;
-						repositoryManager.OrderCarRepository.Update(orderServiceCar);
-                        await repositoryManager.SaveAsync(cancellationToken);
+						var orderServiceCar = await repositoryManager.OrderCarRepository.FindByCondition(c => c.Id == servicecarsId, true).SingleOrDefaultAsync(cancellationToken);
+
+						if (orderServiceCar != null)
+						{
+							// replace current selection with chosen car (single car per service for this flow)
+							orderServiceCar.CarId = carId;
+							repositoryManager.OrderCarRepository.Update(orderServiceCar);
+							await repositoryManager.SaveAsync(cancellationToken);
+						}
+
+
 					}
-
-					await repositoryManager.OrderRepository.UnLockItem(orderId);
-
+					finally
+					{
+						await repositoryManager.OrderRepository.UnLockItem(orderId);
+					}
+					
 					// re-render same page after update
 					await SendServicePageAsync(chatId, orderId, targetServiceIndex0, cancellationToken);
 					return new HandlerResult { Success = true };
+
 				}
 			}
 

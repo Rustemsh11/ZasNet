@@ -22,13 +22,13 @@ public class OrderNotificationService(ITelegramBotAnswerService telegramBotAnswe
                 var service = order.OrderServices.ElementAt(i);
 
                 // Заголовок услуги
-                serviesText.AppendLine($"🔧 Услуга {i + 1}: {service.Service.Name}");
-                serviesText.AppendLine($"   💵 Цена: {service.Price:0.##} • 📦 Объем: {service.TotalVolume}");
-                serviesText.AppendLine($"   🧮 Итого: {service.PriceTotal:0.##}");
+                serviesText.AppendLine($"   🔧 Услуга {i + 1}: {service.Service.Name}");
+                serviesText.AppendLine($"       💵 Цена: {service.Price:0.##} • 📦 Объем: {service.TotalVolume}");
+                serviesText.AppendLine($"       🧮 Итого: {service.PriceTotal:0.##}");
 
                 // Сотрудники
                 var serviceEmployees = service.OrderServiceEmployees.Distinct().ToList();
-                serviesText.AppendLine("👷 Сотрудники:");
+                serviesText.AppendLine("    👷 Сотрудники:");
                 for (int k = 0; k < serviceEmployees.Count; k++)
                 {
                     if (serviceEmployees[k].Employee.ChatId == chatId)
@@ -39,11 +39,11 @@ public class OrderNotificationService(ITelegramBotAnswerService telegramBotAnswe
 
                     if (serviceEmployees[k].Employee.Id == Constants.UnknowingEmployeeId)
                     {
-                        serviesText.AppendLine($" {k + 1}  🆓 Свободно");
+                        serviesText.AppendLine($"       {k + 1}  🆓 Свободно");
                     }
                     else
                     {
-                        serviesText.AppendLine($" {k + 1}  ❓ {serviceEmployees[k].Employee.Name}");
+                        serviesText.AppendLine($"       {k + 1}  ❓ {serviceEmployees[k].Employee.Name}");
                     }
                 }
 
@@ -51,14 +51,14 @@ public class OrderNotificationService(ITelegramBotAnswerService telegramBotAnswe
                 var orderServiceCars = service.OrderServiceCars.ToList();
                 if (orderServiceCars.Count == 0)
                 {
-                    serviesText.AppendLine("🚗 Машины: пока не назначены");
+                    serviesText.AppendLine("    🚗 Машины: пока не назначены");
                 }
                 else
                 {
-                    serviesText.AppendLine("🚗 Машины:");
+                    serviesText.AppendLine("    🚗 Машины:");
                     foreach (var car in orderServiceCars)
                     {
-                        serviesText.AppendLine($"  ❓ • {car.Car.CarModel.Name} ({car.Car.Number})");
+                        serviesText.AppendLine($"       ❓ • {car.Car.CarModel.Name} ({car.Car.Number})");
                     }
                 }
 

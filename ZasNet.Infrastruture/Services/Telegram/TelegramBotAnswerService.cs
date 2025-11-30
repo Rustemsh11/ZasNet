@@ -117,19 +117,31 @@ public class TelegramBotAnswerService : ITelegramBotAnswerService
             {
                 keyboardRows.Add(new[]
                 {
-                        InlineKeyboardButton.WithCallbackData(buttons[i].Text, buttons[i].CallbackData),
-                        InlineKeyboardButton.WithCallbackData(buttons[i + 1].Text, buttons[i + 1].CallbackData)
+                        CreateInlineButton(buttons[i]),
+                        CreateInlineButton(buttons[i + 1])
                     });
             }
             else
             {
                 keyboardRows.Add(new[]
                 {
-                        InlineKeyboardButton.WithCallbackData(buttons[i].Text, buttons[i].CallbackData)
+                        CreateInlineButton(buttons[i])
                     });
             }
         }
 
         return keyboardRows;
+    }
+
+    private InlineKeyboardButton CreateInlineButton(Button button)
+    {
+        if (!string.IsNullOrEmpty(button.Url))
+        {
+            return InlineKeyboardButton.WithUrl(button.Text, button.Url);
+        }
+        else
+        {
+            return InlineKeyboardButton.WithCallbackData(button.Text, button.CallbackData);
+        }
     }
 }

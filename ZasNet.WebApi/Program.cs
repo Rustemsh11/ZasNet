@@ -63,8 +63,9 @@ builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
 builder.Services.AddSingleton<ITelegramValidate, TelegramValidate>();
 builder.Services.AddScoped<IMessageTypeResolver, MessageTypeResolver>();
-builder.Services.AddScoped<ITelegramBotAnswerService, TelegramBotAnswerService>();
+builder.Services.AddTransient<ITelegramBotAnswerService, TelegramBotAnswerService>();
 builder.Services.AddSingleton<IFreeOrdersCache, FreeOrdersCache>();
+builder.Services.AddScoped<IOrderServiceEmployeeApprovalService, OrderServiceEmployeeApprovalService>();
 
 builder.Services.AddScoped<ITelegramMessageHandler, StartCommandHandler>();
 builder.Services.AddScoped<ITelegramMessageHandler, SaveUserChatHandler>();

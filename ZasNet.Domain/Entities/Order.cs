@@ -52,6 +52,8 @@ namespace ZasNet.Domain.Entities;
 
         public PaymentType PaymentType { get; set; }
 
+        public OrderStatus Status { get; set; }
+
         public string? Description { get; set; }
 
         public int CreatedEmployeeId { get; set; }
@@ -73,7 +75,7 @@ namespace ZasNet.Domain.Entities;
             OrderPriceAmount = orderDto.OrderPriceAmount,
             PaymentType = orderDto.PaymentType,
             Description = orderDto.Description,
-            Status = OrderStatus.Created,
+            Status = orderDto.Status,
             CreatedDate = DateTime.Now,
             OrderServices = orderDto.OrderServices,
             ClientType = orderDto.ClientType,
@@ -106,6 +108,6 @@ namespace ZasNet.Domain.Entities;
     public void UpdateStatus(OrderStatus status)
     {
         Status = status;
-        ClosedDate = status == OrderStatus.Closed ? DateTime.UtcNow : null;
+        ClosedDate = status == OrderStatus.Closed ? DateTime.Now : null;
     }
 }
