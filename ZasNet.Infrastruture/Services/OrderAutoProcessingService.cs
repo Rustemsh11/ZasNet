@@ -80,7 +80,7 @@ public class OrderAutoProcessingService : BackgroundService
 				{
 					new Button { Text = "Открыть заявку", Url = $"https://localhost:7111/order/{order.Id}" }
 				};
-				await this.telegramBotAnswer.SendMessageAsync(order.CreatedEmployee.ChatId.Value, $"Началась работа по заявке [{order.Client}]. Необходимо подвтвердить выездны", buttons);
+				//await this.telegramBotAnswer.SendMessageAsync(order.CreatedEmployee.ChatId.Value, $"Началась работа по заявке [{order.Client}]. Необходимо подвтвердить выездны", buttons);
 			}
 			order.UpdateStatus(OrderStatus.Processing);
 			// tracked entities will be saved; Update is not required but safe if the entity wasn't tracked for any reason

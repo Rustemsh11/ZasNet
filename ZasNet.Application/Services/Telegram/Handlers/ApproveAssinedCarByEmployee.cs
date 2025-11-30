@@ -48,6 +48,15 @@ namespace ZasNet.Application.Services.Telegram.Handlers
                     var employeeId = await repositoryManager.EmployeeRepository.FindByCondition(c => c.ChatId == chatId, false).Select(c=>c.Id).SingleOrDefaultAsync(cancellationToken);
                     if (employeeId != 0)
                     {
+                        if(!serviceCars.FirstOrDefault().OrderService.OrderServiceEmployees.Any(c=>c.EmployeeId == employeeId))
+                        {
+                            await telegramBotAnswerService.SendMessageAsync(chatId, $"Вы не можете менять машину так как не являетесь сотрудником заявки. Обновите список", cancellationToken);
+                            return new HandlerResult()
+                            {
+                                Success = true,
+                            };
+                        }
+
                         await repositoryManager.OrderRepository.LockItem(orderId, employeeId);
                     }
                 

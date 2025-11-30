@@ -8,12 +8,15 @@ using ZasNet.Domain.Telegram;
 
 namespace ZasNet.Application.Services.Telegram.Handlers;
 
-public class FreeOrdersHandler(IRepositoryManager repositoryManager, ITelegramBotAnswerService telegramBotAnswerService, IFreeOrdersCache freeOrdersCache) : ITelegramMessageHandler
+public class MyProcessingOrdersHandler(
+	IRepositoryManager repositoryManager,
+	IFreeOrdersCache freeOrdersCache,
+	ITelegramBotAnswerService telegramBotAnswerService) : ITelegramMessageHandler
 {
-	private static readonly string CommandText = "Список свободных заявок";
-    private static readonly string CallbackPrefix = "free_orders";
+	private static readonly string CommandText = "Мои заявки в процессе";
+	private static readonly string CallbackPrefix = "processing_orders";
 
-    public bool CanHandle(TelegramUpdate telegramUpdate)
+	public bool CanHandle(TelegramUpdate telegramUpdate)
 	{
 		if (telegramUpdate?.Message?.Text == CommandText)
 		{
@@ -31,7 +34,6 @@ public class FreeOrdersHandler(IRepositoryManager repositoryManager, ITelegramBo
 
 	public async Task<HandlerResult> HandleAsync(TelegramUpdate telegramUpdate, CancellationToken cancellationToken)
 	{
-		int pageSize = 1;
 		int currentPage = 1;
 
 		if (!string.IsNullOrWhiteSpace(telegramUpdate.CallbackQuery?.Data))
@@ -51,33 +53,45 @@ public class FreeOrdersHandler(IRepositoryManager repositoryManager, ITelegramBo
 			freeOrdersCache.Invalidate(chatId);
 		}
 
+		var employee = await repositoryManager.EmployeeRepository
+			.FindByCondition(e => e.ChatId == chatId, false)
+			.SingleOrDefaultAsync(cancellationToken);
+
+		if (employee == null || employee.ChatId == null)
+		{
+			await telegramBotAnswerService.SendMessageAsync(chatId, "Ваш чат не привязан к пользователю. Отправьте \"Логин:ваш_логин\".", cancellationToken);
+			return new HandlerResult
+			{
+				Success = false,
+			};
+		}
+
 		if (!freeOrdersCache.TryGet(chatId, out var pages))
 		{
-			// Load all free orders once
 			var orders = await repositoryManager.OrderRepository
 				.FindByCondition(o =>
-					o.Status == OrderStatus.Created
-					&& o.OrderServices.Any(os => os.OrderServiceEmployees.Any(c=>c.EmployeeId == Constants.UnknowingEmployeeId) && os.OrderServiceEmployees.Any(c => c.Employee.ChatId != chatId)),
+					o.Status == OrderStatus.Processing
+					&& o.OrderServices.Any(os => os.OrderServiceEmployees.Any(ose => ose.EmployeeId == employee.Id)),
 					false)
-				.Include(c=>c.OrderServices).ThenInclude(c=>c.Service)
-				.Include(c=>c.OrderServices).ThenInclude(c=>c.OrderServiceEmployees).ThenInclude(c=>c.Employee)
-				.Include(c=>c.OrderServices).ThenInclude(c=>c.OrderServiceCars).ThenInclude(c=>c.Car).ThenInclude(c=>c.CarModel)
-				.OrderByDescending(o => o.CreatedDate)
+				.Include(o => o.OrderServices).ThenInclude(os => os.Service)
+				.Include(o => o.OrderServices).ThenInclude(os => os.OrderServiceEmployees).ThenInclude(ose => ose.Employee)
+				.Include(o => o.OrderServices).ThenInclude(os => os.OrderServiceCars).ThenInclude(osc => osc.Car).ThenInclude(c => c.CarModel)
+				.OrderByDescending(o => o.Date)
 				.ToListAsync(cancellationToken);
 
 			if (orders.Count == 0)
 			{
-                await telegramBotAnswerService.SendMessageAsync(chatId, "Свободных заявок нет.");
-                return new HandlerResult
+				await telegramBotAnswerService.SendMessageAsync(employee.ChatId.Value, "У вас нет заявок в процессе.", cancellationToken);
+				return new HandlerResult
 				{
 					Success = true,
 				};
 			}
 
-			// Build cached pages
 			pages = new List<CachedOrderPage>(orders.Count);
 			foreach (var order in orders)
 			{
+				bool currentUserCanApproveCar = false;
 				var serviesText = new StringBuilder();
 				var buttons = new List<Button>();
 
@@ -87,43 +101,37 @@ public class FreeOrdersHandler(IRepositoryManager repositoryManager, ITelegramBo
 
 					var service = order.OrderServices.ElementAt(i);
 
-					// Заголовок услуги
 					serviesText.AppendLine($"	🔧 Услуга {i + 1}: {service.Service.Name}");
 					serviesText.AppendLine($"		💵 Цена: {service.Price:0.##} • 📦 Объем: {service.TotalVolume}");
 					serviesText.AppendLine($"		🧮 Итого: {service.PriceTotal:0.##}");
 
-					// Сотрудники
 					var serviceEmployees = service.OrderServiceEmployees.Distinct().ToList();
-					if (serviceEmployees.Count == 0)
+					serviesText.AppendLine("	👷 Сотрудники:");
+					for (int k = 0; k < serviceEmployees.Count; k++)
 					{
-						serviesText.AppendLine("	👷 Сотрудники: пока не назначены");
-						buttons.Add(new Button { Text = $"Взять услугу {i + 1}", CallbackData = $"order:{service.OrderId}:orderservice:{service.Id}" });
-					}
-					else
-					{
-						serviesText.AppendLine("	👷 Сотрудники:");
-						for (int k = 0; k < serviceEmployees.Count; k++)
+						if (serviceEmployees[k].Employee.Id == Constants.UnknowingEmployeeId)
 						{
-							if (serviceEmployees[k].Employee.Id == Constants.UnknowingEmployeeId)
+							serviesText.AppendLine($"		🆓 Свободно ({k + 1})");
+						}
+						else
+						{
+							if (serviceEmployees[k].Employee.Id == employee.Id)
 							{
-								serviesText.AppendLine($"		🆓 Свободно ({k + 1})");
-								buttons.Add(new Button { Text = $"Взять услугу {i + 1}", CallbackData = $"order:{service.OrderId}:orderservice:{service.Id}" });
+								currentUserCanApproveCar = true;
+							}
+
+							if (serviceEmployees[k].Employee.Id == employee.Id && !serviceEmployees[k].IsApproved)
+							{
+								serviesText.AppendLine($"		❓ {serviceEmployees[k].Employee.Name}");
+								buttons.Add(new Button { Text = $"✅ услугу {i + 1}", CallbackData = $"approveorderservice:{serviceEmployees[k].Id}" });
 							}
 							else
 							{
-								if (serviceEmployees[k].IsApproved)
-								{
-									serviesText.AppendLine($"		✅ {serviceEmployees[k].Employee.Name}");
-								}
-								else
-								{
-                                    serviesText.AppendLine($"		❓ {serviceEmployees[k].Employee.Name}");
-                                }
+								serviesText.AppendLine($"		✅ {serviceEmployees[k].Employee.Name}");
 							}
 						}
 					}
 
-					// Машины
 					var orderServiceCars = service.OrderServiceCars.ToList();
 					if (orderServiceCars.Count == 0)
 					{
@@ -140,18 +148,22 @@ public class FreeOrdersHandler(IRepositoryManager repositoryManager, ITelegramBo
 							}
 							else
 							{
-                                serviesText.AppendLine($"		❓ • {car.Car.CarModel.Name} ({car.Car.Number})");
-                            }
+								serviesText.AppendLine($"		❓ • {car.Car.CarModel.Name} ({car.Car.Number})");
+							}
 						}
 					}
 
-					// Разделитель между услугами
 					serviesText.AppendLine("━━━━━━━━━━━━━━━━━━━━");
 				}
 
+				if (currentUserCanApproveCar)
+				{
+					buttons.Add(new Button { Text = $"✅ машины на выезд", CallbackData = $"approveorderservicecar:{order.Id}" });
+					buttons.Add(new Button { Text = $"🔄 машины на выезд", CallbackData = $"changeorderservicecar:{order.Id}" });
+				}
 
 				var sb = new StringBuilder();
-				sb.AppendLine("🆓 Свободная заявка");
+				sb.AppendLine("🔄 Заявка в процессе");
 				sb.AppendLine($"🧑 Клиент: {order.Client}");
 				sb.AppendLine($"📍 Адрес: {order.AddressCity}, {order.AddressStreet} {order.AddressNumber}");
 				sb.AppendLine($"🗓️ Дата: {order.Date:dd.MM.yyyy HH:mm}");
@@ -190,8 +202,8 @@ public class FreeOrdersHandler(IRepositoryManager repositoryManager, ITelegramBo
 
 		await telegramBotAnswerService.SendCachedOrderPageAsync(chatId, page.MessageText, page.Buttons, currentPage, totalPages, CallbackPrefix, cancellationToken);
 
-		return new HandlerResult { Success = false };
-
-    }
+		return new HandlerResult { Success = true };
+	}
 }
+
 

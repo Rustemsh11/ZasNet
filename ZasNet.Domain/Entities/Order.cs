@@ -98,7 +98,7 @@ namespace ZasNet.Domain.Entities;
         OrderPriceAmount = orderDto.OrderPriceAmount;
         PaymentType = orderDto.PaymentType;
         Description = orderDto.Description;
-        Status = OrderStatus.Created;
+        Status = orderDto.Status;
         CreatedDate = DateTime.Now;
         OrderServices = orderDto.OrderServices;
         ClientType = orderDto.ClientType;

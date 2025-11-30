@@ -31,38 +31,38 @@ public class TelegramBotAnswerService : ITelegramBotAnswerService
         }
     }
 
-    public async Task SendCachedFreeOrderPageAsync(long chatId, string text, List<Button> buttons, int currentPage, int totalPages, CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            var keyboardRows = this.GetInlineButtons(buttons);
+	public async Task SendCachedOrderPageAsync(long chatId, string text, List<Button> buttons, int currentPage, int totalPages, string callbackPrefix, CancellationToken cancellationToken = default)
+	{
+		try
+		{
+			var keyboardRows = this.GetInlineButtons(buttons);
 
-            // nav row
-            if (totalPages > 1)
-            {
-                var navRow = new List<InlineKeyboardButton>(3);
-                if (currentPage > 1)
-                {
-                    navRow.Add(InlineKeyboardButton.WithCallbackData("⟨ Назад", $"free_orders:page:{currentPage - 1}"));
-                }
+			// nav row
+			if (totalPages > 1)
+			{
+				var navRow = new List<InlineKeyboardButton>(3);
+				if (currentPage > 1)
+				{
+					navRow.Add(InlineKeyboardButton.WithCallbackData("⟨ Назад", $"{callbackPrefix}:page:{currentPage - 1}"));
+				}
 
-                navRow.Add(InlineKeyboardButton.WithCallbackData($"Стр {currentPage}/{totalPages}", "noop"));
+				navRow.Add(InlineKeyboardButton.WithCallbackData($"Стр {currentPage}/{totalPages}", "noop"));
 
-                if (currentPage < totalPages)
-                {
-                    navRow.Add(InlineKeyboardButton.WithCallbackData("Вперед ⟩", $"free_orders:page:{currentPage + 1}"));
-                }
+				if (currentPage < totalPages)
+				{
+					navRow.Add(InlineKeyboardButton.WithCallbackData("Вперед ⟩", $"{callbackPrefix}:page:{currentPage + 1}"));
+				}
 
-                keyboardRows.Add(navRow.ToArray());
-            }
+				keyboardRows.Add(navRow.ToArray());
+			}
 
-            await telegramBotClient.SendMessage(new ChatId(chatId), text, replyMarkup: new InlineKeyboardMarkup(keyboardRows), cancellationToken: cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            // add liger
-        }
-    }
+			await telegramBotClient.SendMessage(new ChatId(chatId), text, replyMarkup: new InlineKeyboardMarkup(keyboardRows), cancellationToken: cancellationToken);
+		}
+		catch (Exception ex)
+		{
+			// add liger
+		}
+	}
 
     public Task AnswerCallbackQueryAsync(string callbackQueryId, string? text = null, CancellationToken cancellationToken = default)
     {
@@ -76,8 +76,8 @@ public class TelegramBotAnswerService : ITelegramBotAnswerService
             var keyboard = new ReplyKeyboardMarkup(new[]
             {
                 new[] { new KeyboardButton("Список моих открытых заявок") },
+				new[] { new KeyboardButton("Мои заявки в процессе") },
                 new[] { new KeyboardButton("Список свободных заявок") },
-                new[] { new KeyboardButton("Мои заявки за месяц") },
             })
             {
                 ResizeKeyboard = true,

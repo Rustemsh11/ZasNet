@@ -14,7 +14,7 @@ public class FreeOrdersCache : IFreeOrdersCache
         {
             ChatId = chatId,
             Pages = pages,
-            ExpireAt = DateTimeOffset.UtcNow.Add(ttl)
+            ExpireAt = DateTimeOffset.Now.Add(ttl)
         };
         storage.AddOrUpdate(chatId, entry, (_, __) => entry);
     }
@@ -24,7 +24,7 @@ public class FreeOrdersCache : IFreeOrdersCache
         pages = new List<CachedOrderPage>();
         if (storage.TryGetValue(chatId, out var entry))
         {
-            if (entry.ExpireAt > DateTimeOffset.UtcNow)
+            if (entry.ExpireAt > DateTimeOffset.Now)
             {
                 pages = entry.Pages;
                 return true;

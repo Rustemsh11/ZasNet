@@ -9,7 +9,7 @@ public interface ITelegramBotAnswerService
 
     Task SendMessageAsync(long chatId, string text, List<Button> buttons, CancellationToken cancellationToken = default);
 
-    Task SendCachedFreeOrderPageAsync(long chatId, string text, List<Button> buttons, int currentPage, int totalPages, CancellationToken cancellationToken = default);
+	Task SendCachedOrderPageAsync(long chatId, string text, List<Button> buttons, int currentPage, int totalPages, string callbackPrefix, CancellationToken cancellationToken = default);
 
     Task AnswerCallbackQueryAsync(string callbackQueryId, string? text = null, CancellationToken cancellationToken = default);
 

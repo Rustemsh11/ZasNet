@@ -67,20 +67,20 @@ public class AssignEmployeeToOrderServiceEmployeeHandler(
 				};
 			}
 
-			await repositoryManager.OrderRepository.LockItem(order.Id, employee.Id);
 
-			try
+			if (employee != null)
 			{
-				if (employee != null)
-				{
-					// Load target order service with employees
-					var orderService = await repositoryManager.OrderServiceRepository
-						.FindByCondition(os => os.Id == orderServiceId && os.OrderId == orderId, true)
-						.Include(os => os.OrderServiceEmployees)
-						.SingleOrDefaultAsync(cancellationToken);
+				// Load target order service with employees
+				var orderService = await repositoryManager.OrderServiceRepository
+					.FindByCondition(os => os.Id == orderServiceId && os.OrderId == orderId, true)
+					.Include(os => os.OrderServiceEmployees)
+					.SingleOrDefaultAsync(cancellationToken);
 
-					if (orderService != null)
+				if (orderService != null)
+				{
+					try
 					{
+						await repositoryManager.OrderRepository.LockItem(order.Id, employee.Id);
 						// Skip if already assigned
 						if (!orderService.OrderServiceEmployees.Any(ose => ose.EmployeeId == employee.Id))
 						{
@@ -99,11 +99,11 @@ public class AssignEmployeeToOrderServiceEmployeeHandler(
 							await repositoryManager.SaveAsync(cancellationToken);
 						}
 					}
+					finally
+					{
+						await repositoryManager.OrderRepository.UnLockItem(orderId);
+					}
 				}
-			}
-			finally
-			{
-                await repositoryManager.OrderRepository.UnLockItem(orderId);
 			}
 			
 			await telegramBotAnswerService.SendMessageAsync(chatId, $"Заявка успешно принята", cancellationToken);
@@ -246,7 +246,7 @@ public class AssignEmployeeToOrderServiceEmployeeHandler(
 		var pageIndex = 0;
 		var page = pages[pageIndex];
 
-		await telegramBotAnswerService.SendCachedFreeOrderPageAsync(chatId, page.MessageText, page.Buttons, currentPage, totalPages, cancellationToken);
+		await telegramBotAnswerService.SendCachedOrderPageAsync(chatId, page.MessageText, page.Buttons, currentPage, totalPages, "free_orders", cancellationToken);
 	}
 }
 

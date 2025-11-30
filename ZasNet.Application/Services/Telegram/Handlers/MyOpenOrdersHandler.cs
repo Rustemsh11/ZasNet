@@ -13,15 +13,37 @@ public class MyOpenOrdersHandler(IRepositoryManager repositoryManager,
     ITelegramBotAnswerService telegramBotAnswerService) : ITelegramMessageHandler
 {
 	private static readonly string CommandText = "Список моих открытых заявок";
+    private static readonly string CallbackPrefix = "open_orders";
 
-	public bool CanHandle(TelegramUpdate telegramUpdate)
+    public bool CanHandle(TelegramUpdate telegramUpdate)
 	{
-		return telegramUpdate?.Message?.Text == CommandText;
-	}
+        if (telegramUpdate?.Message?.Text == CommandText)
+        {
+            return true;
+        }
+
+        var data = telegramUpdate?.CallbackQuery?.Data;
+        if (!string.IsNullOrWhiteSpace(data) && data.StartsWith($"{CallbackPrefix}:page:", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return false;
+    }
 
 	public async Task<HandlerResult> HandleAsync(TelegramUpdate telegramUpdate, CancellationToken cancellationToken)
 	{
         long chatId = telegramUpdate.Message?.From.ChatId ?? telegramUpdate.CallbackQuery!.From!.ChatId;
+		int currentPage = 1;
+
+		if (!string.IsNullOrWhiteSpace(telegramUpdate.CallbackQuery?.Data))
+		{
+			var parts = telegramUpdate.CallbackQuery.Data.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+			if (parts.Length >= 3 && int.TryParse(parts[^1], out var parsedPage) && parsedPage > 0)
+			{
+				currentPage = parsedPage;
+			}
+		}
 
         // On explicit command press, reset cache to force fresh load
         if (telegramUpdate.Message?.Text == CommandText)
@@ -35,35 +57,35 @@ public class MyOpenOrdersHandler(IRepositoryManager repositoryManager,
 
 		if (employee == null || employee.ChatId == null)
 		{
-            await telegramBotAnswerService.SendMessageAsync(telegramUpdate.Message.From.ChatId, "Ваш чат не привязан к пользователю. Отправьте \"Логин:ваш_логин\".");
+            await telegramBotAnswerService.SendMessageAsync(chatId, "Ваш чат не привязан к пользователю. Отправьте \"Логин:ваш_логин\".");
             return new HandlerResult
 			{
 				Success = false,
 			};
 		}
 
-		var orders = await repositoryManager.OrderRepository
-			.FindByCondition(o =>
-				o.Status != OrderStatus.Closed
-				&& o.OrderServices.Any(os => os.OrderServiceEmployees.Any(ose => ose.EmployeeId == employee.Id)),
-				false)
-            .Include(o => o.OrderServices).ThenInclude(os => os.Service)
-            .Include(o => o.OrderServices).ThenInclude(os => os.OrderServiceEmployees).ThenInclude(ose => ose.Employee)
-            .Include(o => o.OrderServices).ThenInclude(os => os.OrderServiceCars).ThenInclude(osc => osc.Car).ThenInclude(c => c.CarModel)
-            .OrderByDescending(o => o.Date)
-			.ToListAsync(cancellationToken);
-
-		if (orders.Count == 0)
-		{
-            await telegramBotAnswerService.SendMessageAsync(employee.ChatId.Value, "У вас нет открытых заявок.");
-
-            return new HandlerResult
-			{
-				Success = true,
-			};
-		}
         if (!freeOrdersCache.TryGet(employee.ChatId.Value, out var pages))
         {
+			var orders = await repositoryManager.OrderRepository
+				.FindByCondition(o =>
+					o.Status != OrderStatus.Closed
+					&& o.OrderServices.Any(os => os.OrderServiceEmployees.Any(ose => ose.EmployeeId == employee.Id)),
+					false)
+				.Include(o => o.OrderServices).ThenInclude(os => os.Service)
+				.Include(o => o.OrderServices).ThenInclude(os => os.OrderServiceEmployees).ThenInclude(ose => ose.Employee)
+				.Include(o => o.OrderServices).ThenInclude(os => os.OrderServiceCars).ThenInclude(osc => osc.Car).ThenInclude(c => c.CarModel)
+				.OrderByDescending(o => o.Date)
+				.ToListAsync(cancellationToken);
+
+			if (orders.Count == 0)
+			{
+				await telegramBotAnswerService.SendMessageAsync(employee.ChatId.Value, "У вас нет открытых заявок.");
+
+				return new HandlerResult
+				{
+					Success = true,
+				};
+			}
             // Build cached pages (copy from FreeOrdersHandler to keep output consistent)
             pages = new List<CachedOrderPage>(orders.Count);
             foreach (var order in orders)
@@ -181,10 +203,10 @@ public class MyOpenOrdersHandler(IRepositoryManager repositoryManager,
     
 
         var totalPages = Math.Max(1, pages.Count);
-        var currentPage = 1;
-        var pageIndex = 0;
-        var page = pages[pageIndex];
-        await telegramBotAnswerService.SendCachedFreeOrderPageAsync(employee.ChatId.Value, page.MessageText, page.Buttons, currentPage, totalPages, cancellationToken);
+		if (currentPage > totalPages) currentPage = totalPages;
+		var pageIndex = Math.Max(0, currentPage - 1);
+		var page = pages[pageIndex];
+        await telegramBotAnswerService.SendCachedOrderPageAsync(employee.ChatId.Value, page.MessageText, page.Buttons, currentPage, totalPages, CallbackPrefix, cancellationToken);
 
 		return new HandlerResult
 		{

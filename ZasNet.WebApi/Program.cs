@@ -71,7 +71,7 @@ builder.Services.AddScoped<ITelegramMessageHandler, StartCommandHandler>();
 builder.Services.AddScoped<ITelegramMessageHandler, SaveUserChatHandler>();
 builder.Services.AddScoped<ITelegramMessageHandler, MyOpenOrdersHandler>();
 builder.Services.AddScoped<ITelegramMessageHandler, FreeOrdersHandler>();
-builder.Services.AddScoped<ITelegramMessageHandler, MyOrdersForMonthHandler>();
+builder.Services.AddScoped<ITelegramMessageHandler, MyProcessingOrdersHandler>();
 builder.Services.AddScoped<ITelegramMessageHandler, AssignEmployeeToOrderServiceEmployeeHandler>();
 builder.Services.AddScoped<ITelegramMessageHandler, ApproveAssinedNewOrderByEmployee>();
 builder.Services.AddScoped<ITelegramMessageHandler, RejectAssignedNewOrderByEmployee>();
