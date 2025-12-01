@@ -13,6 +13,7 @@ public class GetOrderHandler(IRepositoryManager repositoryManager,
     {
         var order = await repositoryManager.OrderRepository.FindByCondition(c => c.Id == request.orderId, false)
             .Include(c=>c.CreatedEmployee)
+            .Include(c=>c.OrderDocuments)
             .Include(c=>c.OrderServices).ThenInclude(c=>c.OrderServiceCars).ThenInclude(c=>c.Car).ThenInclude(c => c.CarModel)
             .Include(c=>c.OrderServices).ThenInclude(c=>c.OrderServiceEmployees).ThenInclude(c=>c.Employee)
             .SingleOrDefaultAsync(cancellationToken)

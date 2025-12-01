@@ -50,6 +50,12 @@ public class TelegramController(IMediator mediator,
                     Width = c.Width,
                     FileUniqueId = c.FileUniqueId,
                 }).ToArray(),
+                Document =  update.Message.Document != null ? new TelegramDocument()
+                {
+                    FileId = update.Message.Document.FileId,
+                    FileName = update.Message.Document.FileName,
+                    MimeType = update.Message.Document.MimeType,
+                } : null
 
             },
             CallbackQuery = update.CallbackQuery == null ? null : new TelegramCallbackQuery()
@@ -81,6 +87,12 @@ public class TelegramController(IMediator mediator,
                         Width = c.Width,
                         FileUniqueId = c.FileUniqueId,
                     }).ToArray(),
+                    Document = update.CallbackQuery.Message.Document != null ? new TelegramDocument()
+                    {
+                        FileId = update.CallbackQuery.Message.Document.FileId,
+                        FileName = update.CallbackQuery.Message.Document.FileName,
+                        MimeType = update.CallbackQuery.Message.Document.MimeType,
+                    }: null
 
                 },
             },

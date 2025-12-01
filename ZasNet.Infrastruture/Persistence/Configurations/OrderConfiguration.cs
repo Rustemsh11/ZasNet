@@ -27,5 +27,11 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(c => c.CreatedEmployeeId).HasDefaultValue(1);
 
         builder.HasOne(c=>c.CreatedEmployee).WithMany(c=>c.CreatedByEmployeeOrder).HasForeignKey(c => c.CreatedEmployeeId);
+
+		// Finished by employee (optional)
+		builder.HasOne(c => c.FinishedEmployee)
+			.WithMany()
+			.HasForeignKey(c => c.FinishedEmployeeId)
+			.OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -7,4 +7,6 @@ public class TelegramMessage
     public DateTime Date { get; set; }
     public string? Text { get; set; }
     public TelegramPhoto[]? Photo { get; set; }
+
+    public TelegramDocument? Document { get; set; }
 }

@@ -15,7 +15,10 @@ public class DocumentConfiguration : IEntityTypeConfiguration<Document>
 
         builder.Property(c=>c.Name).IsRequired().HasMaxLength(200);
         builder.Property(c => c.Extension).IsRequired().HasMaxLength(15);
-        builder.Property(c=>c.Path).IsRequired();
+        builder.Property(c=>c.Path).IsRequired(false);
+        builder.Property(c => c.Content).HasColumnType("varbinary(max)").IsRequired(false);
+        builder.Property(c => c.ContentType).HasMaxLength(100).IsRequired(false);
+        builder.Property(c => c.SizeBytes).IsRequired(false);
         builder.Property(c=>c.UploadedDate).IsRequired().HasDefaultValueSql("GETDATE()");
         builder.Property(c => c.DocumentType).IsRequired().HasConversion(documentTypeConverter);
 

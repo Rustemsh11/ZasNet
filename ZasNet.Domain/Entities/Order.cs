@@ -36,6 +36,10 @@ namespace ZasNet.Domain.Entities;
 
     public Employee CreatedEmployee { get; set; }
 
+	public int? FinishedEmployeeId { get; set; }
+
+	public Employee? FinishedEmployee { get; set; }
+
     public class UpsertOrderDto
     {
         public string Client { get; set; }

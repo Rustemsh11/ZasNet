@@ -156,6 +156,11 @@ public class MyProcessingOrdersHandler(
 					serviesText.AppendLine("━━━━━━━━━━━━━━━━━━━━");
 				}
 
+				// Common actions for processing order
+				buttons.Add(new Button { Text = "✏️ Изменить услуги", CallbackData = $"processing_orders:edit:order:{order.Id}" });
+				buttons.Add(new Button { Text = "📸 Фото отчёт", CallbackData = $"processing_orders:photos:start:{order.Id}" });
+				buttons.Add(new Button { Text = "✅ Подтвердить все и завершить заявку", CallbackData = $"processing_orders:finish:{order.Id}" });
+
 				if (currentUserCanApproveCar)
 				{
 					buttons.Add(new Button { Text = $"✅ машины на выезд", CallbackData = $"approveorderservicecar:{order.Id}" });

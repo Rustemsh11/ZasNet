@@ -8,8 +8,8 @@ namespace ZasNet.Application.Services.Telegram.Handlers;
 public class SaveUserChatHandler(IRepositoryManager repositoryManager, ITelegramBotAnswerService telegramBotAnswer) : ITelegramMessageHandler
 {
     public bool CanHandle(TelegramUpdate telegramUpdate)
-    {
-        if (telegramUpdate.Message == null)
+    { 
+        if (telegramUpdate.Message?.Text == null)
         {
             return false; 
         }

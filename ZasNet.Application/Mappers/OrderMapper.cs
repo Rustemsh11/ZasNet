@@ -34,7 +34,20 @@ public class OrderMapper: Profile
                         },
                         OrderServiceId = c.Id,
                         IsApproved = x.IsApproved,
-                    }).ToList()))));;
+                    }).ToList()))))
+            .ForMember(c => c.Documents, c => c.MapFrom(src =>
+                    src.OrderDocuments.Select(d => new DocumentDto
+                    {
+                        Id = d.Id,
+                        Name = d.Name,
+                        Extension = d.Extension,
+                        ContentType = d.ContentType,
+                        SizeBytes = d.SizeBytes,
+                        UploadedDate = d.UploadedDate,
+                        DocumentType = d.DocumentType,
+                        ViewUrl = $"api/v1/Document/View?id={d.Id}",
+                        DownloadUrl = $"api/v1/Document/Download?id={d.Id}"
+                    }).ToList()));
 
         CreateMap<OrderDto, Order.UpsertOrderDto>()
             .ForMember(c=>c.CreatedEmployeeId, c=>c.MapFrom(src=> src.CreatedUser.Id))

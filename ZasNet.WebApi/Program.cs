@@ -65,7 +65,9 @@ builder.Services.AddSingleton<ITelegramValidate, TelegramValidate>();
 builder.Services.AddScoped<IMessageTypeResolver, MessageTypeResolver>();
 builder.Services.AddTransient<ITelegramBotAnswerService, TelegramBotAnswerService>();
 builder.Services.AddSingleton<IFreeOrdersCache, FreeOrdersCache>();
+builder.Services.AddSingleton<IUserSessionCache, UserSessionCache>();
 builder.Services.AddScoped<IOrderServiceEmployeeApprovalService, OrderServiceEmployeeApprovalService>();
+builder.Services.AddScoped<ITelegramFileService, TelegramFileService>();
 
 builder.Services.AddScoped<ITelegramMessageHandler, StartCommandHandler>();
 builder.Services.AddScoped<ITelegramMessageHandler, SaveUserChatHandler>();
@@ -78,6 +80,7 @@ builder.Services.AddScoped<ITelegramMessageHandler, RejectAssignedNewOrderByEmpl
 builder.Services.AddScoped<ITelegramMessageHandler, RefreshMenuHandler>();
 builder.Services.AddScoped<ITelegramMessageHandler, ApproveAssinedCarByEmployee>();
 builder.Services.AddScoped<ITelegramMessageHandler, ChangeOrderServiceCarsHandler>();
+builder.Services.AddScoped<ITelegramMessageHandler, ProcessingOrderEditHandler>();
 
 builder.Services.AddScoped<TelegramMessageProcessor>();
 
