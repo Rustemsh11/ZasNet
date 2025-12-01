@@ -74,7 +74,7 @@ public class MyOpenOrdersHandler(IRepositoryManager repositoryManager,
 				.Include(o => o.OrderServices).ThenInclude(os => os.Service)
 				.Include(o => o.OrderServices).ThenInclude(os => os.OrderServiceEmployees).ThenInclude(ose => ose.Employee)
 				.Include(o => o.OrderServices).ThenInclude(os => os.OrderServiceCars).ThenInclude(osc => osc.Car).ThenInclude(c => c.CarModel)
-				.OrderByDescending(o => o.Date)
+				.OrderByDescending(o => o.DateStart)
 				.ToListAsync(cancellationToken);
 
 			if (orders.Count == 0)
@@ -172,13 +172,13 @@ public class MyOpenOrdersHandler(IRepositoryManager repositoryManager,
                 sb.AppendLine("🅼🆈 Моя заявка");
                 sb.AppendLine($"🧑 Клиент: {order.Client}");
                 sb.AppendLine($"📍 Адрес: {order.AddressCity}, {order.AddressStreet} {order.AddressNumber}");
-                sb.AppendLine($"🗓️ Дата: {order.Date:dd.MM.yyyy HH:mm}");
+                sb.AppendLine($"🗓️ Дата: {order.DateStart:dd.MM.yyyy HH:mm} - {order.DateEnd:dd.MM.yyyy HH:mm}");
                 sb.AppendLine();
                 sb.AppendLine("🧾 Услуги:");
                 sb.AppendLine(serviesText.ToString());
                 sb.AppendLine($"💰 Общая сумма: {order.OrderPriceAmount:0.##}");
-                sb.AppendLine($"💳 Оплата: {order.ClientType}");
-                if (order.ClientType == ClientType.FizNal)
+                sb.AppendLine($"💳 Оплата: {order.PaymentType.ToString()}");
+                if (order.PaymentType == PaymentType.Cash)
                 {
                     sb.AppendLine("‼️ Необходимо забрать оплату после выполнения!");
                 }

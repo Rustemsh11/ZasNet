@@ -40,7 +40,8 @@ public class CreateOrderHandler(
         var order = Order.Create(new UpsertOrderDto()
         {
             Client = request.OrderDto.Client,
-            Date = request.OrderDto.Date,
+            DateStart = request.OrderDto.DateStart,
+            DateEnd = request.OrderDto.DateEnd,
             AddressCity = request.OrderDto.AddressCity,
             AddressStreet = request.OrderDto.AddressStreet,
             AddressNumber = request.OrderDto.AddressNumber,
@@ -49,7 +50,6 @@ public class CreateOrderHandler(
             Description = request.OrderDto.Description,
             OrderServices = orderServices,
             Status = request.OrderDto.Status,
-            ClientType = request.OrderDto.ClientType,
             CreatedEmployeeId = request.OrderDto.CreatedUser.Id,
         });
         

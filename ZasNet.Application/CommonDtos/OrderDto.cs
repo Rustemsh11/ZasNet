@@ -8,7 +8,9 @@ public class OrderDto
 
     public string Client { get; set; }
 
-    public DateTime Date { get; set; }
+    public DateTime DateStart { get; set; }
+
+    public DateTime DateEnd { get; set; }
 
     public string AddressCity { get; set; }
 
@@ -19,8 +21,6 @@ public class OrderDto
     public decimal OrderPriceAmount { get; set; }
 
     public PaymentType PaymentType { get; set; }
-
-    public ClientType ClientType { get; set; }
 
     public OrderStatus Status { get; set; }
 

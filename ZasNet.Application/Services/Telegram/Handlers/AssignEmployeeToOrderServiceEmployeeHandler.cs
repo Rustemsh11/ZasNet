@@ -212,13 +212,13 @@ public class AssignEmployeeToOrderServiceEmployeeHandler(
 				sb.AppendLine("🆓 Свободная заявка");
 				sb.AppendLine($"🧑 Клиент: {order.Client}");
 				sb.AppendLine($"📍 Адрес: {order.AddressCity}, {order.AddressStreet} {order.AddressNumber}");
-				sb.AppendLine($"🗓️ Дата: {order.Date:dd.MM.yyyy HH:mm}");
+				sb.AppendLine($"🗓️ Дата: {order.DateStart:dd.MM.yyyy HH:mm} - {order.DateEnd:dd.MM.yyyy HH:mm}");
 				sb.AppendLine();
 				sb.AppendLine("🧾 Услуги:");
 				sb.AppendLine(serviesText.ToString());
 				sb.AppendLine($"💰 Общая сумма: {order.OrderPriceAmount:0.##}");
-				sb.AppendLine($"💳 Оплата: {order.ClientType}");
-				if (order.ClientType == ClientType.FizNal)
+				sb.AppendLine($"💳 Оплата: {order.PaymentType.ToString()}");
+				if (order.PaymentType == PaymentType.Cash)
 				{
 					sb.AppendLine("‼️ Необходимо забрать оплату после выполнения!");
 				}

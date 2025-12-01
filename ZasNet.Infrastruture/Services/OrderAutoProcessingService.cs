@@ -63,7 +63,7 @@ public class OrderAutoProcessingService : BackgroundService
 
 		var dueOrders = await repositoryManager
 			.OrderRepository
-			.FindByCondition(o => o.Status == OrderStatus.ApprovedWithEmployers || o.Status == OrderStatus.Created && o.Date <= now, true)
+			.FindByCondition(o => o.Status == OrderStatus.ApprovedWithEmployers || o.Status == OrderStatus.Created && o.DateStart <= now, true)
 			.Include(c=>c.CreatedEmployee)
 			.ToListAsync(cancellationToken);
 

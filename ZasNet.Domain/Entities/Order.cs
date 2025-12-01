@@ -6,7 +6,9 @@ namespace ZasNet.Domain.Entities;
 {
     public string Client {  get; set; }
 
-    public DateTime Date { get; set; }
+    public DateTime DateStart { get; set; }
+
+    public DateTime DateEnd { get; set; }
 
     public string AddressCity { get; set; }
 
@@ -26,8 +28,6 @@ namespace ZasNet.Domain.Entities;
 
     public DateTime? ClosedDate { get; private set;}
 
-    public ClientType ClientType { get; private set;}
-
     public int CreatedEmployeeId { get; set; }
 
     public ICollection<OrderService> OrderServices { get; set; }
@@ -44,7 +44,8 @@ namespace ZasNet.Domain.Entities;
     {
         public string Client { get; set; }
 
-        public DateTime Date { get; set; }
+        public DateTime DateStart { get; set; }
+        public DateTime DateEnd { get; set; }
 
         public string AddressCity { get; set; }
 
@@ -62,8 +63,6 @@ namespace ZasNet.Domain.Entities;
 
         public int CreatedEmployeeId { get; set; }
 
-        public ClientType ClientType { get; set; }
-
         public List<OrderService> OrderServices { get; set; }
     }
     
@@ -72,7 +71,8 @@ namespace ZasNet.Domain.Entities;
         return new Order()
         {
             Client = orderDto.Client,
-            Date = orderDto.Date,
+            DateStart = orderDto.DateStart,
+            DateEnd = orderDto.DateEnd,
             AddressCity = orderDto.AddressCity,
             AddressStreet = orderDto.AddressStreet,
             AddressNumber = orderDto.AddressNumber,
@@ -82,20 +82,15 @@ namespace ZasNet.Domain.Entities;
             Status = orderDto.Status,
             CreatedDate = DateTime.Now,
             OrderServices = orderDto.OrderServices,
-            ClientType = orderDto.ClientType,
             CreatedEmployeeId = orderDto.CreatedEmployeeId,
         };
     }
 
     public void Update(UpsertOrderDto orderDto) 
     {
-        if(Status == OrderStatus.CreatedInvoice)
-        {
-            throw new InvalidOperationException("Нельзя изменять заявку со статусом: Создан счет");
-        }
-
         Client = orderDto.Client;
-        Date = orderDto.Date;
+        DateStart = orderDto.DateStart;
+        DateEnd = orderDto.DateEnd;
         AddressCity = orderDto.AddressCity;
         AddressStreet = orderDto.AddressStreet;
         AddressNumber = orderDto.AddressNumber;
@@ -103,9 +98,7 @@ namespace ZasNet.Domain.Entities;
         PaymentType = orderDto.PaymentType;
         Description = orderDto.Description;
         Status = orderDto.Status;
-        CreatedDate = DateTime.Now;
         OrderServices = orderDto.OrderServices;
-        ClientType = orderDto.ClientType;
         CreatedEmployeeId = orderDto.CreatedEmployeeId;
     }
 
