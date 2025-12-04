@@ -8,7 +8,7 @@ public class GetOrdersResponse
 
     public string Client {  get; set; }
 
-    public DateTime Date { get; set; }
+    public DateTime DateStart { get; set; }
 
     public OrderStatus Status { get; set; }
 
