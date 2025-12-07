@@ -11,10 +11,10 @@ public class GetCreateOrderParametersHandler(IRepositoryManager repositoryManage
     public async Task<CreateOrderParameters> Handle(GetCreateOrderParametersRequest request, CancellationToken cancellationToken)
     {
         var employees = await repositoryManager.EmployeeRepository.FindAll(false).Select(c=> new EmployeeDto() { Id = c.Id, Name = c.Name}).ToListAsync(cancellationToken);
-        var services = await repositoryManager.ServiceRepository.FindAll(false).Select(c=>new ServiceDto() { Id = c.Id,
+        var services = await repositoryManager.ServiceRepository.FindAll(false).Include(c=>c.Measure).Select(c=>new ServiceDto() { Id = c.Id,
             Name = c.Name,
             MinPrice = c.Price,
-            Measure = c.Measure,
+            Measure = c.Measure.Name,
             MinVolume = c.MinVolume}).ToListAsync(cancellationToken);
         var cars = await repositoryManager.CarRepository.FindAll(false).Include(c=>c.CarModel).Select(c=> new CarDto() { Id = c.Id, Name = $"{c.CarModel.Name}({c.Number})" }).ToListAsync(cancellationToken);
 

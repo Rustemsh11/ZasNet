@@ -9,7 +9,14 @@ public class OrderMapper: Profile
 {
     public OrderMapper()
     {
-        CreateMap<Order, GetOrdersResponse>();
+        CreateMap<Order, GetOrdersResponse>()
+            .ForMember(c => c.Address, c => c.MapFrom(src => $"{src.AddressCity} {src.AddressStreet} {src.AddressNumber}"))
+            .ForMember(c => c.CarNames, c => c.MapFrom(src => src.OrderServices
+                .SelectMany(os => os.OrderServiceCars.Select(osc => osc.Car.Number))
+                .ToList()))
+            .ForMember(c => c.CarIds, c => c.MapFrom(src => src.OrderServices
+                .SelectMany(os => os.OrderServiceCars.Select(osc => osc.CarId))
+                .ToList()));
         CreateMap<Order, OrderDto>()
             .ForMember(c => c.CreatedUser, c => c.MapFrom(src =>
                     new EmployeeDto() { Id = src.CreatedEmployeeId, Name = src.CreatedEmployee.Name}))

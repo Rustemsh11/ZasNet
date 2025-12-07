@@ -12,7 +12,9 @@ public class ServiceConfiguration : IEntityTypeConfiguration<Service>
 
         builder.Property(c=>c.Name).IsRequired();
         builder.Property(c=>c.Price).IsRequired();
-        builder.Property(c=>c.Measure).IsRequired().HasMaxLength(100);
+        builder.Property(c=>c.MeasureId).IsRequired();
         builder.Property(c=>c.MinVolume).IsRequired();
+
+        builder.HasOne(c => c.Measure).WithMany(c => c.Services);
     }
 }

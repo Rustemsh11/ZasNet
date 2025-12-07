@@ -10,6 +10,14 @@ public class GetOrdersResponse
 
     public DateTime DateStart { get; set; }
 
+    public DateTime DateEnd { get; set; }
+    
+    public string Address { get; set; }
+
     public OrderStatus Status { get; set; }
+    
+    public List<string?> CarNames { get; set; }
+    
+    public List<int?> CarIds { get; set; }
 
 }

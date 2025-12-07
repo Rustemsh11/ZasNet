@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ZasNet.Infrastruture.Persistence;
 
@@ -11,9 +12,11 @@ using ZasNet.Infrastruture.Persistence;
 namespace ZasNet.Infrastruture.Migrations
 {
     [DbContext(typeof(ZasNetDbContext))]
-    partial class ZasNetDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251206084407_addedAdmin")]
+    partial class addedAdmin
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -197,35 +200,6 @@ namespace ZasNet.Infrastruture.Migrations
                             Name = "admin",
                             Password = "$2a$11$TTmUKfiEKsy8HxE2Agg2.eVxlbn/biUtN4lloHIYuqYSovk3pl5sy",
                             RoleId = 1
-                        });
-                });
-
-            modelBuilder.Entity("ZasNet.Domain.Entities.Measure", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Measures");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Name = "метр"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Name = "час"
                         });
                 });
 
@@ -450,8 +424,10 @@ namespace ZasNet.Infrastruture.Migrations
                     b.Property<int?>("LockedByUserId")
                         .HasColumnType("int");
 
-                    b.Property<int>("MeasureId")
-                        .HasColumnType("int");
+                    b.Property<string>("Measure")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<double>("MinVolume")
                         .HasColumnType("float");
@@ -464,8 +440,6 @@ namespace ZasNet.Infrastruture.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("MeasureId");
 
                     b.ToTable("Services", (string)null);
                 });
@@ -577,17 +551,6 @@ namespace ZasNet.Infrastruture.Migrations
                     b.Navigation("OrderService");
                 });
 
-            modelBuilder.Entity("ZasNet.Domain.Entities.Service", b =>
-                {
-                    b.HasOne("ZasNet.Domain.Entities.Measure", "Measure")
-                        .WithMany("Services")
-                        .HasForeignKey("MeasureId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Measure");
-                });
-
             modelBuilder.Entity("ZasNet.Domain.Entities.Car", b =>
                 {
                     b.Navigation("OrderServiceCars");
@@ -603,11 +566,6 @@ namespace ZasNet.Infrastruture.Migrations
                     b.Navigation("CreatedByEmployeeOrder");
 
                     b.Navigation("OrderServiceEmployees");
-                });
-
-            modelBuilder.Entity("ZasNet.Domain.Entities.Measure", b =>
-                {
-                    b.Navigation("Services");
                 });
 
             modelBuilder.Entity("ZasNet.Domain.Entities.Order", b =>

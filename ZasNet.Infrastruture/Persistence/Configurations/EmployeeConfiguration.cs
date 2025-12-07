@@ -25,5 +25,14 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
             Password = "changeme",
             RoleId = 3,
         });
+        
+        builder.HasData(new Employee()
+        {
+            Id = 2,
+            Name = "admin",
+            Login = "admin",
+            Password = "$2a$11$TTmUKfiEKsy8HxE2Agg2.eVxlbn/biUtN4lloHIYuqYSovk3pl5sy",
+            RoleId = 1,
+        });
     }
 }
