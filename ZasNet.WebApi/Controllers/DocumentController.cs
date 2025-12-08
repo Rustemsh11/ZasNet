@@ -17,7 +17,7 @@ public class DocumentController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> Download([FromQuery] DownloadDocumentRequest downloadDocumentRequest, CancellationToken cancellationToken)
+    public async Task<FileContentResult> Download([FromQuery] DownloadDocumentRequest downloadDocumentRequest, CancellationToken cancellationToken)
     {
         return await mediator.Send(downloadDocumentRequest, cancellationToken);
     }

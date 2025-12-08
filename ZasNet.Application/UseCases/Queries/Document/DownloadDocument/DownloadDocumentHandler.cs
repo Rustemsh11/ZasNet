@@ -19,7 +19,12 @@ public class DownloadDocumentHandler(IRepositoryManager repositoryManager) : IRe
         }
 
         var contentType = doc.ContentType ?? "application/octet-stream";
-        var fileName = string.IsNullOrWhiteSpace(doc.Name) ? $"document_{doc.Id}.{doc.Extension}" : doc.Name;
+        // Ensure filename includes extension so OS can recognize the file type after download
+        var extensionWithDot = string.IsNullOrWhiteSpace(doc.Extension) ? string.Empty : $".{doc.Extension.TrimStart('.')}";
+        var baseName = string.IsNullOrWhiteSpace(doc.Name) ? $"document_{doc.Id}" : doc.Name;
+        var fileName = baseName.EndsWith(extensionWithDot, StringComparison.OrdinalIgnoreCase) || string.IsNullOrEmpty(extensionWithDot)
+            ? baseName
+            : $"{baseName}{extensionWithDot}";
         return new FileContentResult(doc.Content, contentType) { FileDownloadName = fileName };
     }
 }
