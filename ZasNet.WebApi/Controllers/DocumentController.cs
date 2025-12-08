@@ -1,45 +1,32 @@
 using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ZasNet.Application.Repository;
+using ZasNet.Application.UseCases.Commands.Document.AddDocument;
+using ZasNet.Application.UseCases.Queries.Document.DownloadDocument;
+using ZasNet.Application.UseCases.Queries.Document.ViewDocument;
 
 namespace ZasNet.WebApi.Controllers;
 
 [Route("api/v1/[controller]/[action]")]
 [ApiController]
-public class DocumentController(IRepositoryManager repositoryManager) : ControllerBase
+public class DocumentController(IMediator mediator) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> View([FromQuery] int id, CancellationToken cancellationToken)
+    public async Task<FileContentResult> View([FromQuery] ViewDocumentRequest viewDocumentRequest, CancellationToken cancellationToken)
     {
-        var doc = await repositoryManager.DocumentRepository
-            .FindByCondition(d => d.Id == id, false)
-            .SingleOrDefaultAsync(cancellationToken);
-
-        if (doc == null || doc.Content == null || doc.Content.Length == 0)
-        {
-            return NotFound();
-        }
-
-        var contentType = doc.ContentType ?? "application/octet-stream";
-        return File(doc.Content, contentType);
+        return await mediator.Send(viewDocumentRequest, cancellationToken);
     }
 
     [HttpGet]
-    public async Task<IActionResult> Download([FromQuery] int id, CancellationToken cancellationToken)
+    public async Task<IActionResult> Download([FromQuery] DownloadDocumentRequest downloadDocumentRequest, CancellationToken cancellationToken)
     {
-        var doc = await repositoryManager.DocumentRepository
-            .FindByCondition(d => d.Id == id, false)
-            .SingleOrDefaultAsync(cancellationToken);
+        return await mediator.Send(downloadDocumentRequest, cancellationToken);
+    }
 
-        if (doc == null || doc.Content == null || doc.Content.Length == 0)
-        {
-            return NotFound();
-        }
-
-        var contentType = doc.ContentType ?? "application/octet-stream";
-        var fileName = string.IsNullOrWhiteSpace(doc.Name) ? $"document_{doc.Id}.{doc.Extension}" : doc.Name;
-        return File(doc.Content, contentType, fileName);
+    [HttpPost]
+    public async Task AddDocument(
+        [FromForm] AddDocumentCommand addDocumentCommand,
+        CancellationToken cancellationToken)
+    {
+        await mediator.Send(addDocumentCommand, cancellationToken);
     }
 }
