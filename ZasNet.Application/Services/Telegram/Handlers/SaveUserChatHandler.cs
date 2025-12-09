@@ -21,14 +21,17 @@ public class SaveUserChatHandler(IRepositoryManager repositoryManager, ITelegram
     {
         var userName = telegramUpdate.Message.Text.Substring("Логин:".Length).Trim();
 
-        var employee = await repositoryManager.EmployeeRepository.FindByCondition(c => c.Login == userName, true).SingleOrDefaultAsync(cancellationToken)
+        var employee = await repositoryManager.EmployeeRepository.FindByCondition(c => c.Login == userName, true).Include(c=>c.Role).SingleOrDefaultAsync(cancellationToken)
             ?? throw new ArgumentException($"Нет пользователя с логином {userName}");
 
         employee.SetChatId(telegramUpdate.Message.From.ChatId);
 
         await repositoryManager.SaveAsync(cancellationToken);
 
-        await telegramBotAnswer.SendMessageWithMenuAsync(employee.ChatId.Value, "Чат успешно сохранён. Выберите действие из меню ниже.", cancellationToken);
+        var generalLedger = await repositoryManager.RoleRepository.FindByCondition(c => c.Name == "Бухгалтер", false).SingleAsync();
+        var isGeneralLedger = employee.Role.Id ==  generalLedger.Id;
+
+        await telegramBotAnswer.SendMessageWithMenuAsync(employee.ChatId.Value, "Чат успешно сохранён. Выберите действие из меню ниже.", isGeneralLedger, cancellationToken);
 
         return new HandlerResult()
         {

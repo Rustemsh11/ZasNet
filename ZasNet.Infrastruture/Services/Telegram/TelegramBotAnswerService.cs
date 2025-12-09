@@ -69,21 +69,38 @@ public class TelegramBotAnswerService : ITelegramBotAnswerService
         return Task.CompletedTask;
     } //check to delete
 
-    public async Task SendMessageWithMenuAsync(long chatId, string text, CancellationToken cancellationToken = default)
+    public async Task SendMessageWithMenuAsync(long chatId, string text, bool isGeneralLedgerUser, CancellationToken cancellationToken = default)
     {
         try
         {
-            var keyboard = new ReplyKeyboardMarkup(new[]
+            ReplyKeyboardMarkup keyboard = null;
+
+            if (isGeneralLedgerUser)
             {
-                new[] { new KeyboardButton("Список моих открытых заявок") },
-				new[] { new KeyboardButton("Мои заявки в процессе") },
-                new[] { new KeyboardButton("Список свободных заявок") },
-            })
+                keyboard = new ReplyKeyboardMarkup(new[]
+                    {
+                        new[] { new KeyboardButton("Заявки требующие счета") },
+                    })
+                {
+                    ResizeKeyboard = true,
+                    OneTimeKeyboard = false,
+                    Selective = false
+                };
+            }
+            else
             {
-                ResizeKeyboard = true,
-                OneTimeKeyboard = false,
-                Selective = false
-            };
+                keyboard = new ReplyKeyboardMarkup(new[]
+                    {
+                        new[] { new KeyboardButton("Список моих открытых заявок") },
+                        new[] { new KeyboardButton("Мои заявки в процессе") },
+                        new[] { new KeyboardButton("Список свободных заявок") },
+                    })
+                {
+                    ResizeKeyboard = true,
+                    OneTimeKeyboard = false,
+                    Selective = false
+                };
+            }
 
             await telegramBotClient.SendMessage(new ChatId(chatId), text, replyMarkup: keyboard, cancellationToken: cancellationToken);
         }

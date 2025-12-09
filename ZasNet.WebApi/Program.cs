@@ -81,6 +81,7 @@ builder.Services.AddScoped<ITelegramMessageHandler, RefreshMenuHandler>();
 builder.Services.AddScoped<ITelegramMessageHandler, ApproveAssinedCarByEmployee>();
 builder.Services.AddScoped<ITelegramMessageHandler, ChangeOrderServiceCarsHandler>();
 builder.Services.AddScoped<ITelegramMessageHandler, ProcessingOrderEditHandler>();
+builder.Services.AddScoped<ITelegramMessageHandler, GetNeedInvoiceOrdersHandler>();
 
 builder.Services.AddScoped<TelegramMessageProcessor>();
 

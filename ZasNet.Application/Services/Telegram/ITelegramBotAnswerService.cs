@@ -13,5 +13,5 @@ public interface ITelegramBotAnswerService
 
     Task AnswerCallbackQueryAsync(string callbackQueryId, string? text = null, CancellationToken cancellationToken = default);
 
-    Task SendMessageWithMenuAsync(long chatId, string text, CancellationToken cancellationToken = default);
+    Task SendMessageWithMenuAsync(long chatId, string text, bool isGeneralLedgerUser, CancellationToken cancellationToken = default);
 }

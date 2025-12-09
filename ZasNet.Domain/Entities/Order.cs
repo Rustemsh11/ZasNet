@@ -30,6 +30,8 @@ namespace ZasNet.Domain.Entities;
 
     public int CreatedEmployeeId { get; set; }
 
+    public bool? NeedInvoiceUrgently { get; set; }
+    
     public ICollection<OrderService> OrderServices { get; set; }
 
     public ICollection<Document> OrderDocuments { get; set; }
