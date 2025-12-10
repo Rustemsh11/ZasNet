@@ -1,11 +1,15 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using ZasNet.Application.Repository;
+using ZasNet.Application.Services;
 using ZasNet.Application.Services.Telegram;
 
 namespace ZasNet.Application.UseCases.Commands.Orders.ChangeOrderStatusToWaitingInvoice;
 
-public class ChangeOrderStatusToWaitingInvoiceHandler(IRepositoryManager repositoryManager, ITelegramBotAnswerService telegramBotAnswerService) : IRequestHandler<ChangeOrderStatusToWaitingInvoiceCommand>
+public class ChangeOrderStatusToWaitingInvoiceHandler(
+    IRepositoryManager repositoryManager,
+    ITelegramBotAnswerService telegramBotAnswerService,
+    ICurrentUserService currentUserService) : IRequestHandler<ChangeOrderStatusToWaitingInvoiceCommand>
 {
     public async Task Handle(ChangeOrderStatusToWaitingInvoiceCommand request, CancellationToken cancellationToken)
     {
@@ -17,10 +21,18 @@ public class ChangeOrderStatusToWaitingInvoiceHandler(IRepositoryManager reposit
             return;
         }
 
-        order.UpdateStatus(Domain.Enums.OrderStatus.CreatingInvoice);
-        order.NeedInvoiceUrgently = request.isNeedInvoiceArgently;
+        await repositoryManager.OrderRepository.LockItem(request.Id, currentUserService.CurrentUserId);
+        try
+        {
+            order.UpdateStatus(Domain.Enums.OrderStatus.CreatingInvoice);
+            order.NeedInvoiceUrgently = request.isNeedInvoiceArgently;
 
-        await repositoryManager.SaveAsync(cancellationToken);
+            await repositoryManager.SaveAsync(cancellationToken);
+        }
+        finally
+        {
+            await repositoryManager.OrderRepository.UnLockItem(request.Id);
+        }
 
         if (request.isNeedInvoiceArgently)
         {

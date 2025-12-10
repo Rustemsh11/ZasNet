@@ -2,7 +2,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ZasNet.Application.CommonDtos;
-using ZasNet.Application.UseCases.Queries.Car;
+using ZasNet.Application.UseCases.Queries.Car.GetAllActiveCars;
+using ZasNet.Application.UseCases.Queries.Car.GetAllCars;
 
 
 namespace ZasNet.WebApi.Controllers;
@@ -16,5 +17,11 @@ public class CarController(IMediator mediator): ControllerBase
     public async Task<List<CarDto>> GetAllCars([FromQuery] GetAllCarsRequest getAllCarsRequest, CancellationToken cancellationToken)
     {
         return await mediator.Send(getAllCarsRequest, cancellationToken);
+    }
+    
+    [HttpGet]
+    public async Task<List<CarDto>> GetActiveCars([FromQuery] GetAllActiveCarsRequest getAllActiveCars, CancellationToken cancellationToken)
+    {
+        return await mediator.Send(getAllActiveCars, cancellationToken);
     }
 }

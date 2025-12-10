@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -68,6 +69,7 @@ builder.Services.AddSingleton<IFreeOrdersCache, FreeOrdersCache>();
 builder.Services.AddSingleton<IUserSessionCache, UserSessionCache>();
 builder.Services.AddScoped<IOrderServiceEmployeeApprovalService, OrderServiceEmployeeApprovalService>();
 builder.Services.AddScoped<ITelegramFileService, TelegramFileService>();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 builder.Services.AddScoped<ITelegramMessageHandler, StartCommandHandler>();
 builder.Services.AddScoped<ITelegramMessageHandler, SaveUserChatHandler>();
@@ -121,6 +123,7 @@ builder.Services.AddCors(opt =>
 
 // Background services
 builder.Services.AddHostedService<OrderAutoProcessingService>();
+builder.Services.AddHttpContextAccessor();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

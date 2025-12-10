@@ -162,7 +162,7 @@ public class GetNeedInvoiceOrdersHandler(
 					buttons.Add(new Button
 					{
 						Text = "📄 Акт выполненных работ",
-						Url = $"api/v1/Document/Download?id={actDoc.Id}"
+						Url = $"https://57os4v-176-52-23-103.ru.tuna.am/api/v1/Document/Download?id={actDoc.Id}"
 					});
 				}
 
@@ -279,6 +279,10 @@ public class GetNeedInvoiceOrdersHandler(
 				};
 				repositoryManager.DocumentRepository.Create(doc);
 			}
+
+			var order = await repositoryManager.OrderRepository.FindByCondition(c => c.Id == orderId, true).SingleAsync(cancellationToken);
+			order.UpdateStatus(OrderStatus.AwaitingPayment);
+
 			await repositoryManager.SaveAsync(cancellationToken);
 
 			invoiceSessions.TryRemove(chatId, out _);

@@ -1,7 +1,9 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using ZasNet.Application.CommonDtos;
+using ZasNet.Application.UseCases.Commands.Orders.ChangeOrderStatus;
 using ZasNet.Application.UseCases.Commands.Orders.ChangeOrderStatusToWaitingInvoice;
 using ZasNet.Application.UseCases.Commands.Orders.CreateOrder;
 using ZasNet.Application.UseCases.Commands.Orders.SaveOrder;
@@ -48,6 +50,12 @@ public class OrderController(IMediator mediator): ControllerBase
     
     [HttpPost]
     public async Task ChangeStatusToWaitingInvoice([FromBody] ChangeOrderStatusToWaitingInvoiceCommand command, CancellationToken token)
+    {
+        await mediator.Send(command, token);
+    }
+    
+    [HttpPost]
+    public async Task ChangeOrderStatus([FromBody] ChangeOrderStatusCommand command, CancellationToken token)
     {
         await mediator.Send(command, token);
     }

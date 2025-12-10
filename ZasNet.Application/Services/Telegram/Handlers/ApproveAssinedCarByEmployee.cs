@@ -43,6 +43,7 @@ namespace ZasNet.Application.Services.Telegram.Handlers
 
                     var serviceCars = await repositoryManager.OrderCarRepository.FindByCondition(c => c.OrderService.OrderId == orderId, true)
                         .Include(c => c.OrderService).ThenInclude(c => c.Service)
+                        .Include(c => c.OrderService).ThenInclude(c => c.OrderServiceEmployees).ThenInclude(c=>c.Employee)
                         .Include(c=>c.Car)
                         .ToListAsync(cancellationToken);
                     var employeeId = await repositoryManager.EmployeeRepository.FindByCondition(c => c.ChatId == chatId, false).Select(c=>c.Id).SingleOrDefaultAsync(cancellationToken);

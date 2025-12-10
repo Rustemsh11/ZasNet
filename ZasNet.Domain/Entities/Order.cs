@@ -100,7 +100,6 @@ namespace ZasNet.Domain.Entities;
         PaymentType = orderDto.PaymentType;
         Description = orderDto.Description;
         Status = orderDto.Status;
-        OrderServices = orderDto.OrderServices;
         CreatedEmployeeId = orderDto.CreatedEmployeeId;
     }
 
