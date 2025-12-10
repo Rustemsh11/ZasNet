@@ -421,7 +421,7 @@ public class ProcessingOrderEditHandler(
 
 			if (session.PhotoFileIds.Count == 0 && session.PendingDocuments.Count == 0)
 			{
-				await telegramBotAnswerService.SendMessageAsync(chatId, "Файлы не получены. Пришлите хотя бы один файл или отмените.", cancellationToken);
+				await telegramBotAnswerService.SendMessageAsync(chatId, "Файлы не получены. Пришлите хотя бы один файл", cancellationToken);
 				return new HandlerResult { Success = true };
 			}
 

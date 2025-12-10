@@ -63,7 +63,6 @@ builder.Services.AddScoped<IPasswordHashService, PasswordHashService>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
 builder.Services.AddSingleton<ITelegramValidate, TelegramValidate>();
-builder.Services.AddScoped<IMessageTypeResolver, MessageTypeResolver>();
 builder.Services.AddTransient<ITelegramBotAnswerService, TelegramBotAnswerService>();
 builder.Services.AddSingleton<IFreeOrdersCache, FreeOrdersCache>();
 builder.Services.AddSingleton<IUserSessionCache, UserSessionCache>();

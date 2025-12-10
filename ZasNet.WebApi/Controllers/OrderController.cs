@@ -43,9 +43,9 @@ public class OrderController(IMediator mediator): ControllerBase
     }
     
     [HttpPost]
-    public async Task SaveOrder([FromBody] SaveOrderCommand saveOrderCommand, CancellationToken token)
+    public async Task<string> SaveOrder([FromBody] SaveOrderCommand saveOrderCommand, CancellationToken token)
     {
-        await mediator.Send(saveOrderCommand, token);
+        return await mediator.Send(saveOrderCommand, token);
     }
     
     [HttpPost]

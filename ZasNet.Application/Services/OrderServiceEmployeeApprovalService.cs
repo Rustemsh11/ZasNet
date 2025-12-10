@@ -25,7 +25,7 @@ public class OrderServiceEmployeeApprovalService(IRepositoryManager repositoryMa
             return new ApprovalResult
             {
                 Success = false,
-                Message = "Не удалось подтвердить услугу. Сотрудник услуги не найден."
+                Message = "Не удалось подтвердить услугу. Сотрудник услуги не найден. Попробуйте обновить список"
             };
         }
 

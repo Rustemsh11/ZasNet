@@ -3,6 +3,7 @@ using System.Text;
 using ZasNet.Application.Repository;
 using ZasNet.Domain;
 using ZasNet.Domain.Enums;
+using ZasNet.Domain.Helpers;
 using ZasNet.Domain.Interfaces;
 using ZasNet.Domain.Telegram;
 
@@ -217,7 +218,7 @@ public class AssignEmployeeToOrderServiceEmployeeHandler(
 				sb.AppendLine("🧾 Услуги:");
 				sb.AppendLine(serviesText.ToString());
 				sb.AppendLine($"💰 Общая сумма: {order.OrderPriceAmount:0.##}");
-				sb.AppendLine($"💳 Оплата: {order.PaymentType.ToString()}");
+				sb.AppendLine($"💳 Оплата: {EnumsToStringConverter.GetPaymentTypeDescription(order.PaymentType)}");
 				if (order.PaymentType == PaymentType.Cash)
 				{
 					sb.AppendLine("‼️ Необходимо забрать оплату после выполнения!");

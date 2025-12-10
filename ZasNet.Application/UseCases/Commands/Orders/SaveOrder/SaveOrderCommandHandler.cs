@@ -9,14 +9,20 @@ namespace ZasNet.Application.UseCases.Commands.Orders.SaveOrder;
 
 public class SaveOrderCommandHandler(IRepositoryManager repositoryManager,
     ICurrentUserService currentUserService,
-    IMapper mapper) : IRequestHandler<SaveOrderCommand>
+    IMapper mapper) : IRequestHandler<SaveOrderCommand, string>
 {
-    public async Task Handle(SaveOrderCommand request, CancellationToken cancellationToken)
+    public async Task<string> Handle(SaveOrderCommand request, CancellationToken cancellationToken)
     {
         var order = await repositoryManager.OrderRepository.FindByCondition(c => c.Id == request.OrderDto.Id, true)
             .Include(c => c.OrderServices).ThenInclude(c => c.OrderServiceCars)
             .Include(c => c.OrderServices).ThenInclude(c => c.OrderServiceEmployees)
             .SingleAsync(cancellationToken);
+
+        if (order.IsLocked)
+        {
+            var user = await repositoryManager.EmployeeRepository.FindByCondition(c => c.Id == order.LockedByUserId, false).SingleOrDefaultAsync();
+            return $"Заявку редактирует {user.Name}. Попробуйте попытку через пару минут";
+        }
 
         await repositoryManager.OrderRepository.LockItem(request.OrderDto.Id, currentUserService.CurrentUserId);
         try
@@ -35,6 +41,8 @@ public class SaveOrderCommandHandler(IRepositoryManager repositoryManager,
         {
             await repositoryManager.OrderRepository.UnLockItem(request.OrderDto.Id);
         }
+
+        return "";
     }
 
     private void SyncOrderServices(Order order, List<OrderService> incomingServices)
