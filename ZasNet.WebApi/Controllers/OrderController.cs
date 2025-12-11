@@ -10,6 +10,7 @@ using ZasNet.Application.UseCases.Commands.Orders.SaveOrder;
 using ZasNet.Application.UseCases.Queries.Orders.GetCreateOrderParameters;
 using ZasNet.Application.UseCases.Queries.Orders.GetOrder;
 using ZasNet.Application.UseCases.Queries.Orders.GetOrders;
+using ZasNet.Application.UseCases.Queries.Orders.GetOrdersByFilter;
 
 namespace ZasNet.WebApi.Controllers;
 
@@ -22,6 +23,12 @@ public class OrderController(IMediator mediator): ControllerBase
     public async Task<List<GetOrdersResponse>> GetOrders([FromQuery]GetOrdersRequest getOrdersRequest, CancellationToken cancellationToken)
     {
         return await mediator.Send(getOrdersRequest, cancellationToken);
+    }
+    
+    [HttpGet]
+    public async Task<List<GetOrdersByFilterResponse>> GetOrdersByFilter([FromQuery]GetOrdersByFilterRequest request, CancellationToken cancellationToken)
+    {
+        return await mediator.Send(request, cancellationToken);
     }
     
     [HttpGet]

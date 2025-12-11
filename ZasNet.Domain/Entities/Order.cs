@@ -105,6 +105,14 @@ namespace ZasNet.Domain.Entities;
 
     public void UpdateStatus(OrderStatus status)
     {
+        if (status == OrderStatus.Closed)
+        {
+            if (this.Status != Domain.Enums.OrderStatus.AwaitingPayment && this.Status != Domain.Enums.OrderStatus.Finished)
+            {
+                throw new InvalidOperationException("Чтобы закрыть заявку статус должен быть либо 'Ожидает оплаты клиента', либо 'Работа завершена'");
+            }
+        }
+
         Status = status;
         ClosedDate = status == OrderStatus.Closed ? DateTime.Now : null;
     }

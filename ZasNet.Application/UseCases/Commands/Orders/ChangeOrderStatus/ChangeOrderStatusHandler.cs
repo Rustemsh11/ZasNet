@@ -11,22 +11,17 @@ public class ChangeOrderStatusHandler(IRepositoryManager repositoryManager, ICur
     {
         var order = await repositoryManager.OrderRepository.FindByCondition(c=>c.Id == request.OrderId, true).SingleAsync(cancellationToken);
         
-        if (order.Status == Domain.Enums.OrderStatus.AwaitingPayment || order.Status == Domain.Enums.OrderStatus.Finished)
+        try
         {
+            order.UpdateStatus(request.OrderStatus);
             await repositoryManager.OrderRepository.LockItem(request.OrderId, currentUserService.CurrentUserId);
-            try
-            {
-                order.UpdateStatus(Domain.Enums.OrderStatus.Closed);
-                await repositoryManager.SaveAsync(cancellationToken);
-            }
-            finally
-            {
-                await repositoryManager.OrderRepository.UnLockItem(request.OrderId);
-            }
-
-            return;
+            await repositoryManager.SaveAsync(cancellationToken);
+        }
+        finally
+        {
+            await repositoryManager.OrderRepository.UnLockItem(request.OrderId);
         }
 
-        throw new InvalidOperationException("Чтобы закрыть заявку статус должен быть либо 'Ожидает оплаты клиента', либо 'Работа завершена'");
+        return;
     }
 }

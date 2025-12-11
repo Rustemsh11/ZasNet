@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <Folder Include="UseCases\Commands\Authentication\" />
+    <Folder Include="UseCases\Queries\Orders\GetOrdersByFilter\" />
   </ItemGroup>
 
   <ItemGroup>

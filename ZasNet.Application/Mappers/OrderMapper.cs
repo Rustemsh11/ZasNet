@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using ZasNet.Application.CommonDtos;
 using ZasNet.Application.UseCases.Queries.Orders.GetOrders;
+using ZasNet.Application.UseCases.Queries.Orders.GetOrdersByFilter;
 using ZasNet.Domain.Entities;
 
 namespace ZasNet.Application.Mappers;
@@ -17,6 +18,20 @@ public class OrderMapper: Profile
             .ForMember(c => c.CarIds, c => c.MapFrom(src => src.OrderServices
                 .SelectMany(os => os.OrderServiceCars.Select(osc => osc.CarId))
                 .ToList()));
+
+        CreateMap<Order, GetOrdersByFilterResponse>()
+            .ForMember(dest => dest.Address, opt => opt.MapFrom(src => 
+                $"{src.AddressCity} {src.AddressStreet} {src.AddressNumber}"))
+            .ForMember(dest => dest.CreatedEmployeeName, opt => opt.MapFrom(src => 
+                src.CreatedEmployee != null ? src.CreatedEmployee.Name : string.Empty))
+            .ForMember(dest => dest.ServiceNames, opt => opt.MapFrom(src =>
+                src.OrderServices.Select(os => os.Service != null ? os.Service.Name : string.Empty).ToList()))
+            .ForMember(dest => dest.CarNames, opt => opt.MapFrom(src =>
+                src.OrderServices
+                    .SelectMany(os => os.OrderServiceCars.Select(osc => osc.Car != null ? osc.Car.Number : string.Empty))
+                    .Distinct()
+                    .ToList()));
+
         CreateMap<Order, OrderDto>()
             .ForMember(c => c.CreatedUser, c => c.MapFrom(src =>
                     new EmployeeDto() { Id = src.CreatedEmployeeId, Name = src.CreatedEmployee.Name}))
