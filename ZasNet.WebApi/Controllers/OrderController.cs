@@ -16,7 +16,7 @@ namespace ZasNet.WebApi.Controllers;
 
 [Route("api/v1/[controller]/[action]")]
 [ApiController]
-[Authorize]
+//[Authorize]
 public class OrderController(IMediator mediator): ControllerBase
 {
     [HttpGet]

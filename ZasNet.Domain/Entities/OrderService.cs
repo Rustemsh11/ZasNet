@@ -19,4 +19,6 @@ public class OrderService : LockedItemBase
     public ICollection<OrderServiceCar> OrderServiceCars { get; set; }
 
     public ICollection<OrderServiceEmployee> OrderServiceEmployees { get; set; }
+
+    public EmployeeEarinig EmployeeEarinig { get; set; }
 }

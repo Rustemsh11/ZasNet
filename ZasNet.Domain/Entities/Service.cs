@@ -10,6 +10,13 @@
 
         public double MinVolume { get; set; }
 
+        public decimal StandartPrecentForEmployee { get; set; }
+        
+        public decimal PrecentForMultipleEmployeers { get; set; }
+
+        public decimal PrecentLaterOrderForEmployee { get; set; }
+        public decimal PrecentLaterOrderForMultipleEmployeers { get; set; }
+
         public ICollection<OrderService> OrderServices { get; set; }
 
         public Measure Measure { get; set; }
