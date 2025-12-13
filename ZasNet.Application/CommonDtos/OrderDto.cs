@@ -31,4 +31,8 @@ public class OrderDto
     public List<OrderServiceDto> OrderServicesDtos { get; set; }
 
     public List<DocumentDto> Documents { get; set; }
+
+    public bool? IsAlmazOrder { get; set; }
+
+    public bool? IsCashWasTransferred { get; set; }
 }

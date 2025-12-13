@@ -14,7 +14,7 @@ public class EmployeeEarinig : BaseItem
 
     public OrderService OrderService { get; set; }
 
-    public static EmployeeEarinig CreateEmployeeEarning(OrderService orderService)
+    public static EmployeeEarinig CreateEmployeeEarning(CreateEmployeeEarningDto orderService)
     {
         var (percent, description) = GetPrecent(orderService);
         return new EmployeeEarinig()
@@ -22,33 +22,46 @@ public class EmployeeEarinig : BaseItem
             ServiceEmployeePrecent = percent,
             PrecentEmployeeDescription = description,
             EmployeeEarning = GetEarning(orderService, percent),
-            OrderServiceId = orderService.Id,
         };
     }
 
-    private static (decimal Precent, string Description) GetPrecent(OrderService orderService)
+    public class CreateEmployeeEarningDto
     {
-        var precent = orderService.Service.StandartPrecentForEmployee;
+        public decimal StandartPrecentForEmployee { get; set; }
+        public decimal PrecentForMultipleEmployeers { get; set; }
+        public decimal PrecentLaterOrderForEmployee { get; set; }
+        public decimal PrecentLaterOrderForMultipleEmployeers { get; set; }
+
+        public int OrderServiceEmployeesCount { get; set; }
+
+        public DateTime OrderStartDateTime { get; set; }
+
+        public decimal TotalPrice { get; set; }
+    }
+
+    private static (decimal Precent, string Description) GetPrecent(CreateEmployeeEarningDto orderService)
+    {
+        var precent = orderService.StandartPrecentForEmployee;
         var descriptionBuilder = $"Стандартный процент за выполнение услуги 1 сотрудником";
         
-        if (orderService.OrderServiceEmployees.Count > 1)
+        if (orderService.OrderServiceEmployeesCount > 1)
         {
-            if (orderService.Order.DateStart.TimeOfDay.Hours > TimeSpan.FromHours(18).Hours)
+            if (orderService.OrderStartDateTime.TimeOfDay.Hours > TimeSpan.FromHours(18).Hours)
             {
-                precent = orderService.Service.PrecentLaterOrderForMultipleEmployeers;
+                precent = orderService.PrecentLaterOrderForMultipleEmployeers;
                 descriptionBuilder = $"Процент за выполнение услуги после 18:00 несколькими сотрудниками";
             }
             else
             {
-                precent = orderService.Service.PrecentForMultipleEmployeers;
+                precent = orderService.PrecentForMultipleEmployeers;
                 descriptionBuilder = $"Процент за выполнение услуги нескольким сотрудником";
             }
         }
         else
         {
-            if (orderService.Order.DateStart.TimeOfDay.Hours > TimeSpan.FromHours(18).Hours)
+            if (orderService.OrderStartDateTime.TimeOfDay.Hours > TimeSpan.FromHours(18).Hours)
             {
-                precent = orderService.Service.PrecentLaterOrderForEmployee;
+                precent = orderService.PrecentLaterOrderForEmployee;
                 descriptionBuilder = $"Процент за выполнение услуги после 18:00 1 сотрудником";
             }
         }
@@ -56,10 +69,10 @@ public class EmployeeEarinig : BaseItem
         return (precent, descriptionBuilder);
     }
 
-    private static decimal GetEarning(OrderService orderService, decimal precent)
+    private static decimal GetEarning(CreateEmployeeEarningDto orderService, decimal precent)
     {
-        var percentForEmployee = Math.Ceiling(precent / orderService.OrderServiceEmployees.Count);
+        var percentForEmployee = Math.Ceiling(precent / orderService.OrderServiceEmployeesCount);
 
-        return orderService.PriceTotal * percentForEmployee/100.0M;
+        return orderService.TotalPrice * percentForEmployee/100.0M;
     }
 }

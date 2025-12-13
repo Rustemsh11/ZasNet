@@ -32,6 +32,10 @@ namespace ZasNet.Domain.Entities;
 
     public bool? NeedInvoiceUrgently { get; set; }
     
+    public bool? IsAlmazOrder { get; set; }
+
+    public bool? IsCashWasTransferred { get; set; }
+
     public ICollection<OrderService> OrderServices { get; set; }
 
     public ICollection<Document> OrderDocuments { get; set; }
@@ -47,6 +51,7 @@ namespace ZasNet.Domain.Entities;
         public string Client { get; set; }
 
         public DateTime DateStart { get; set; }
+
         public DateTime DateEnd { get; set; }
 
         public string AddressCity { get; set; }
@@ -64,6 +69,10 @@ namespace ZasNet.Domain.Entities;
         public string? Description { get; set; }
 
         public int CreatedEmployeeId { get; set; }
+
+        public bool? IsAlmazOrder { get; set; }
+
+        public bool? IsCashWasTransferred { get; set; }
 
         public List<OrderService> OrderServices { get; set; }
     }
@@ -84,6 +93,8 @@ namespace ZasNet.Domain.Entities;
             Status = orderDto.Status,
             CreatedDate = DateTime.Now,
             OrderServices = orderDto.OrderServices,
+            IsAlmazOrder = orderDto.IsAlmazOrder,
+            IsCashWasTransferred = orderDto.IsCashWasTransferred,
             CreatedEmployeeId = orderDto.CreatedEmployeeId,
         };
     }
@@ -100,6 +111,8 @@ namespace ZasNet.Domain.Entities;
         PaymentType = orderDto.PaymentType;
         Description = orderDto.Description;
         Status = orderDto.Status;
+        IsAlmazOrder = orderDto.IsAlmazOrder;
+        IsCashWasTransferred = orderDto.IsCashWasTransferred;
         CreatedEmployeeId = orderDto.CreatedEmployeeId;
     }
 

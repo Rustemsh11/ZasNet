@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using ZasNet.Application.CommonDtos;
 using ZasNet.Application.Repository;
 using ZasNet.Application.Services;
 using ZasNet.Domain.Entities;
+using static ZasNet.Domain.Entities.EmployeeEarinig;
 
 namespace ZasNet.Application.UseCases.Commands.Orders.SaveOrder;
 
@@ -11,8 +13,8 @@ public class SaveOrderCommandHandler(IRepositoryManager repositoryManager,
     ICurrentUserService currentUserService,
     IMapper mapper) : IRequestHandler<SaveOrderCommand, string>
 {
-    private readonly List<OrderService> _newOrderServices = new();
-    private readonly List<int> _updatedOrderServiceIds = new();
+    private readonly List<(OrderService orderService, OrderServiceDto dto)> _newOrderServices = new();
+    private readonly List<(int orderServiceId, OrderServiceDto dto)> _updatedOrderServices = new();
 
     public async Task<string> Handle(SaveOrderCommand request, CancellationToken cancellationToken)
     {
@@ -24,7 +26,7 @@ public class SaveOrderCommandHandler(IRepositoryManager repositoryManager,
         if (order.IsLocked)
         {
             var user = await repositoryManager.EmployeeRepository.FindByCondition(c => c.Id == order.LockedByUserId, false).SingleOrDefaultAsync();
-            return $"Заявку редактирует {user.Name}. Попробуйте попытку через пару минут";
+            return $"Заявку редактирует {user?.Name ?? "другой пользователь"}. Попробуйте попытку через пару минут";
         }
 
         await repositoryManager.OrderRepository.LockItem(request.OrderDto.Id, currentUserService.CurrentUserId);
@@ -36,13 +38,13 @@ public class SaveOrderCommandHandler(IRepositoryManager repositoryManager,
             order.Update(upsertOrderDto);
 
             // Sync OrderServices
-            await SyncOrderServices(order, upsertOrderDto.OrderServices, cancellationToken);
+            await SyncOrderServices(order, upsertOrderDto.OrderServices, request.OrderDto.OrderServicesDtos, cancellationToken);
 
             // Создание EmployeeEarning для новых OrderService
             await CreateEmployeeEarningsForNewServices(order, cancellationToken);
 
             // Обновление EmployeeEarning для измененных OrderService
-            await UpdateEmployeeEarningsForUpdatedServices(cancellationToken);
+            await UpdateEmployeeEarningsForUpdatedServices(order, cancellationToken);
 
             await repositoryManager.SaveAsync(cancellationToken);
         }
@@ -54,7 +56,7 @@ public class SaveOrderCommandHandler(IRepositoryManager repositoryManager,
         return "";
     }
 
-    private async Task SyncOrderServices(Order order, List<OrderService> incomingServices, CancellationToken cancellationToken)
+    private async Task SyncOrderServices(Order order, List<OrderService> incomingServices, List<OrderServiceDto> incomingServiceDtos, CancellationToken cancellationToken)
     {
         var existingServices = order.OrderServices.ToList();
 
@@ -81,6 +83,11 @@ public class SaveOrderCommandHandler(IRepositoryManager repositoryManager,
         // Update existing or add new services
         foreach (var incoming in incomingServices)
         {
+            // Находим соответствующий DTO для получения данных о процентах
+            var incomingDto = incomingServiceDtos.FirstOrDefault(dto => 
+                (dto.Id == incoming.Id && dto.Id != 0) || 
+                (dto.Id == 0 && dto.ServiceId == incoming.ServiceId));
+
             var existing = existingServices.FirstOrDefault(s => s.Id == incoming.Id);
             if (existing != null)
             {
@@ -109,9 +116,9 @@ public class SaveOrderCommandHandler(IRepositoryManager repositoryManager,
                 }
 
                 // Track if we need to update EmployeeEarning
-                if (needsEarningUpdate)
+                if (needsEarningUpdate && incomingDto != null)
                 {
-                    _updatedOrderServiceIds.Add(existing.Id);
+                    _updatedOrderServices.Add((existing.Id, incomingDto));
                 }
             }
             else
@@ -121,7 +128,11 @@ public class SaveOrderCommandHandler(IRepositoryManager repositoryManager,
                 incoming.Order = order;
                 incoming.Service = services.First(s => s.Id == incoming.ServiceId);
                 order.OrderServices.Add(incoming);
-                _newOrderServices.Add(incoming);
+                
+                if (incomingDto != null)
+                {
+                    _newOrderServices.Add((incoming, incomingDto));
+                }
             }
         }
     }
@@ -130,46 +141,62 @@ public class SaveOrderCommandHandler(IRepositoryManager repositoryManager,
     {
         if (_newOrderServices.Count == 0) return Task.CompletedTask;
 
-        foreach (var orderService in _newOrderServices)
+        foreach (var (orderService, dto) in _newOrderServices)
         {
-            // Навигационные свойства уже установлены в SyncOrderServices
-            var employeeEarning = EmployeeEarinig.CreateEmployeeEarning(orderService);
-            repositoryManager.EmployeeEarningRepository.Create(employeeEarning);
+            var createEmployeeEarningDto = new CreateEmployeeEarningDto()
+            {
+                PrecentForMultipleEmployeers = dto.PrecentForMultipleEmployeers,
+                PrecentLaterOrderForEmployee = dto.PrecentLaterOrderForEmployee,
+                PrecentLaterOrderForMultipleEmployeers = dto.PrecentLaterOrderForMultipleEmployeers,
+                StandartPrecentForEmployee = dto.StandartPrecentForEmployee,
+                OrderServiceEmployeesCount = orderService.OrderServiceEmployees.Count,
+                OrderStartDateTime = order.DateStart,
+                TotalPrice = orderService.PriceTotal,
+            };
+
+            orderService.EmployeeEarinig = EmployeeEarinig.CreateEmployeeEarning(createEmployeeEarningDto);
         }
 
         return Task.CompletedTask;
     }
 
-    private async Task UpdateEmployeeEarningsForUpdatedServices(CancellationToken cancellationToken)
+    private async Task UpdateEmployeeEarningsForUpdatedServices(Order order, CancellationToken cancellationToken)
     {
-        if (_updatedOrderServiceIds.Count == 0) return;
+        if (_updatedOrderServices.Count == 0) return;
 
-        foreach (var orderServiceId in _updatedOrderServiceIds)
-        {
-            // Находим и удаляем старый EmployeeEarning
-            var existingEarning = await repositoryManager.EmployeeEarningRepository
-                .FindByCondition(ee => ee.OrderServiceId == orderServiceId, true)
-                .SingleOrDefaultAsync(cancellationToken);
+        var orderServiceIds = _updatedOrderServices.Select(x => x.orderServiceId).ToList();
 
-            if (existingEarning != null)
-            {
-                repositoryManager.EmployeeEarningRepository.Delete(existingEarning);
-            }
-        }
-
-        // Загружаем обновленные OrderService с необходимыми данными для пересчета
+        // Загружаем обновленные OrderService с необходимыми данными
         var updatedOrderServices = await repositoryManager.OrderServiceRepository
-            .FindByCondition(os => _updatedOrderServiceIds.Contains(os.Id), false)
-            .Include(os => os.Service)
-            .Include(os => os.Order)
+            .FindByCondition(os => orderServiceIds.Contains(os.Id), true)
             .Include(os => os.OrderServiceEmployees)
+            .Include(os => os.EmployeeEarinig)
             .ToListAsync(cancellationToken);
 
         foreach (var orderService in updatedOrderServices)
         {
+            // Находим соответствующий DTO
+            var dto = _updatedOrderServices.First(x => x.orderServiceId == orderService.Id).dto;
+
+            // Удаляем старый EmployeeEarning если существует
+            if (orderService.EmployeeEarinig != null)
+            {
+                repositoryManager.EmployeeEarningRepository.Delete(orderService.EmployeeEarinig);
+            }
+
             // Создаем новый EmployeeEarning с обновленными данными
-            var newEmployeeEarning = EmployeeEarinig.CreateEmployeeEarning(orderService);
-            repositoryManager.EmployeeEarningRepository.Create(newEmployeeEarning);
+            var createEmployeeEarningDto = new CreateEmployeeEarningDto()
+            {
+                PrecentForMultipleEmployeers = dto.PrecentForMultipleEmployeers,
+                PrecentLaterOrderForEmployee = dto.PrecentLaterOrderForEmployee,
+                PrecentLaterOrderForMultipleEmployeers = dto.PrecentLaterOrderForMultipleEmployeers,
+                StandartPrecentForEmployee = dto.StandartPrecentForEmployee,
+                OrderServiceEmployeesCount = orderService.OrderServiceEmployees.Count,
+                OrderStartDateTime = order.DateStart,
+                TotalPrice = orderService.PriceTotal,
+            };
+
+            orderService.EmployeeEarinig = EmployeeEarinig.CreateEmployeeEarning(createEmployeeEarningDto);
         }
     }
 

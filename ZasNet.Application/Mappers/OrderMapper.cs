@@ -37,6 +37,10 @@ public class OrderMapper: Profile
                     new EmployeeDto() { Id = src.CreatedEmployeeId, Name = src.CreatedEmployee.Name}))
             .ForMember(c => c.OrderServicesDtos, c => c.MapFrom(src =>
                     src.OrderServices.Select(c => new OrderServiceDto(c.Id, c.ServiceId, c.Price, c.TotalVolume,
+                    c.Service.StandartPrecentForEmployee,
+                    c.Service.PrecentForMultipleEmployeers,
+                    c.Service.PrecentLaterOrderForEmployee,
+                    c.Service.PrecentLaterOrderForMultipleEmployeers,
                     c.OrderServiceEmployees.Select(x=> new OrderServiceEmployeeDto() 
                     {
                         Employee = new EmployeeDto()

@@ -56,7 +56,7 @@ public class GetEmployeeEarningByMounthHandler(IRepositoryManager repositoryMana
                     OrderDateStart = ee.OrderService.Order.DateStart,
                     OrderDateEnd = ee.OrderService.Order.DateEnd,
                     ServiceName = ee.OrderService.Service.Name,
-                    Employee = new EmployeeInfo
+                    Employee = new CommonDtos.EmployeeDto
                     {
                         Id = employee.Employee.Id,
                         Name = employee.Employee.Name

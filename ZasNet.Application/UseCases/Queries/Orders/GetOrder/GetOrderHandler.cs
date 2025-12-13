@@ -16,6 +16,8 @@ public class GetOrderHandler(IRepositoryManager repositoryManager,
             .Include(c=>c.OrderDocuments)
             .Include(c=>c.OrderServices).ThenInclude(c=>c.OrderServiceCars).ThenInclude(c=>c.Car).ThenInclude(c => c.CarModel)
             .Include(c=>c.OrderServices).ThenInclude(c=>c.OrderServiceEmployees).ThenInclude(c=>c.Employee)
+            .Include(c=>c.OrderServices).ThenInclude(c=>c.EmployeeEarinig)
+            .Include(c=>c.OrderServices).ThenInclude(c=>c.Service)
             .SingleOrDefaultAsync(cancellationToken)
             ?? throw new ArgumentException($"Заявки с id: {request.orderId} не найден");
 

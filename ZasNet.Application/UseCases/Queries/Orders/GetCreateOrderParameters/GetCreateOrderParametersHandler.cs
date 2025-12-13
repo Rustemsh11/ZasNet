@@ -15,6 +15,10 @@ public class GetCreateOrderParametersHandler(IRepositoryManager repositoryManage
             Name = c.Name,
             MinPrice = c.Price,
             Measure = c.Measure.Name,
+            StandartPrecentForEmployee = c.StandartPrecentForEmployee,
+            PrecentLaterOrderForMultipleEmployeers = c.PrecentLaterOrderForMultipleEmployeers,
+            PrecentForMultipleEmployeers = c.PrecentForMultipleEmployeers,
+            PrecentLaterOrderForEmployee = c.PrecentLaterOrderForEmployee,
             MinVolume = c.MinVolume}).ToListAsync(cancellationToken);
         var cars = await repositoryManager.CarRepository.FindByCondition(c => c.Status == CarStatus.Active, false).Include(c=>c.CarModel).Select(c=> new CarDto() { Id = c.Id, Name = $"{c.CarModel.Name}({c.Number})" }).ToListAsync(cancellationToken);
 

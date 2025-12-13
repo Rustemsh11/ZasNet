@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using ZasNet.Application.Repository;
 using ZasNet.Application.Services.Telegram;
 using ZasNet.Domain.Entities;
+using static ZasNet.Domain.Entities.EmployeeEarinig;
 using static ZasNet.Domain.Entities.Order;
 
 namespace ZasNet.Application.UseCases.Commands.Orders.CreateOrder;
@@ -36,12 +37,25 @@ public class CreateOrderHandler(
                     })
                     .ToList(),
             };
-            
+
+            var createEmployeeEarningDto = new CreateEmployeeEarningDto()
+            {
+                PrecentForMultipleEmployeers = c.PrecentForMultipleEmployeers,
+                PrecentLaterOrderForEmployee = c.PrecentLaterOrderForEmployee,
+                PrecentLaterOrderForMultipleEmployeers = c.PrecentLaterOrderForMultipleEmployeers,
+                StandartPrecentForEmployee = c.StandartPrecentForEmployee,
+                OrderServiceEmployeesCount = orderService.OrderServiceEmployees.Count,
+                OrderStartDateTime = request.OrderDto.DateStart,
+                TotalPrice = orderService.PriceTotal,
+            };
+
+            orderService.EmployeeEarinig = EmployeeEarinig.CreateEmployeeEarning(createEmployeeEarningDto);
+
             return orderService;
         }).ToList();
 
 
-
+        
         // Загружаем Service для каждого OrderService до создания заказа
         var serviceIds = request.OrderDto.OrderServicesDtos.Select(dto => dto.ServiceId).Distinct().ToList();
         var services = await repositoryManager.ServiceRepository
@@ -61,21 +75,12 @@ public class CreateOrderHandler(
             Description = request.OrderDto.Description,
             OrderServices = orderServices,
             Status = request.OrderDto.Status,
+            IsAlmazOrder = request.OrderDto.IsAlmazOrder,
+            IsCashWasTransferred = request.OrderDto.IsCashWasTransferred,
             CreatedEmployeeId = request.OrderDto.CreatedUser.Id,
         });
         
         repositoryManager.OrderRepository.Create(order);
-
-        // Создание EmployeeEarning для каждого OrderService в той же транзакции
-        foreach (var orderService in orderServices)
-        {
-            // Устанавливаем навигационные свойства вручную
-            orderService.Order = order;
-            orderService.Service = services.First(s => s.Id == orderService.ServiceId);
-
-            var employeeEarning = EmployeeEarinig.CreateEmployeeEarning(orderService);
-            repositoryManager.EmployeeEarningRepository.Create(employeeEarning);
-        }
         
         await repositoryManager.SaveAsync(cancellationToken);
 

@@ -1,3 +1,5 @@
+using ZasNet.Application.CommonDtos;
+
 namespace ZasNet.Application.UseCases.Queries.EmployeeEarning.GetEmployeeEarningByMounth;
 
 /// <summary>
@@ -38,7 +40,7 @@ public class GetEmployeeEarningByMounthResponse
     /// <summary>
     /// Сотрудник
     /// </summary>
-    public EmployeeInfo Employee { get; set; } = new();
+    public EmployeeDto Employee { get; set; } = new();
 
     /// <summary>
     /// Процент для сотрудника
@@ -64,14 +66,5 @@ public class GetEmployeeEarningByMounthResponse
     /// Объем работ
     /// </summary>
     public double TotalVolume { get; set; }
-}
-
-/// <summary>
-/// Информация о сотруднике
-/// </summary>
-public class EmployeeInfo
-{
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
 }
 
