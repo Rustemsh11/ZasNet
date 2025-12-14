@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace ZasNet.Domain.Entities;
+﻿namespace ZasNet.Domain.Entities;
 
 public class EmployeeEarinig : BaseItem
 {

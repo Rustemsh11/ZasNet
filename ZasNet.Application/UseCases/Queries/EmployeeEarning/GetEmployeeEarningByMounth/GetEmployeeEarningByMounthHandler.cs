@@ -45,8 +45,17 @@ public class GetEmployeeEarningByMounthHandler(IRepositoryManager repositoryMana
         
         foreach (var ee in earnings)
         {
+            // Получаем список сотрудников для фильтрации
+            var employeesToInclude = ee.OrderService.OrderServiceEmployees.AsEnumerable();
+            
+            // Если есть фильтр по сотрудникам, применяем его
+            if (request.EmployeeIds != null && request.EmployeeIds.Any())
+            {
+                employeesToInclude = employeesToInclude.Where(ose => request.EmployeeIds.Contains(ose.EmployeeId));
+            }
+            
             // Для каждого сотрудника, назначенного на OrderService, создаем отдельную запись
-            foreach (var employee in ee.OrderService.OrderServiceEmployees)
+            foreach (var employee in employeesToInclude)
             {
                 result.Add(new GetEmployeeEarningByMounthResponse
                 {
