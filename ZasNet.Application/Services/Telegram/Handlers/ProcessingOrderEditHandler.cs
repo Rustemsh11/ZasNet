@@ -2,11 +2,11 @@ using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Text;
 using ZasNet.Application.Repository;
-using ZasNet.Application.Services.Telegram;
 using ZasNet.Domain.Entities;
 using ZasNet.Domain.Enums;
 using ZasNet.Domain.Interfaces;
 using ZasNet.Domain.Telegram;
+using static ZasNet.Domain.Entities.EmployeeEarinig;
 
 namespace ZasNet.Application.Services.Telegram.Handlers;
 
@@ -318,7 +318,18 @@ public class ProcessingOrderEditHandler(
 				return new HandlerResult { Success = true };
 			}
 
-			var os = await repositoryManager.OrderServiceRepository.FindByCondition(x => x.Id == session.OrderServiceId && x.OrderId == session.OrderId, true).SingleOrDefaultAsync(cancellationToken);
+			var os = await repositoryManager.OrderServiceRepository
+				.FindByCondition(x => x.Id == session.OrderServiceId && x.OrderId == session.OrderId, true)
+				.Include(os => os.OrderServiceEmployees)
+				.Include(os => os.EmployeeEarinig)
+				.Include(os => os.Service)
+				.Include(os => os.Order)
+					.ThenInclude(o => o.DispetcherEarning)
+				.Include(os => os.Order)
+					.ThenInclude(o => o.OrderServices)
+				.Include(os => os.Order)
+					.ThenInclude(o => o.CreatedEmployee)
+				.SingleOrDefaultAsync(cancellationToken);
 			if (os == null)
 			{
 				await telegramBotAnswerService.SendMessageAsync(chatId, "Услуга не найдена.", cancellationToken);
@@ -327,6 +338,13 @@ public class ProcessingOrderEditHandler(
 
 			os.Price = newPrice;
 			os.PriceTotal = os.Price * (decimal)os.TotalVolume;
+
+			// Обновление EmployeeEarning
+			await UpdateEmployeeEarningForOrderService(os, cancellationToken);
+
+			// Обновление DispetcherEarning
+			await UpdateDispetcherEarningForOrder(os.Order, cancellationToken);
+
 			await repositoryManager.SaveAsync(cancellationToken);
 
 			freeOrdersCache.Invalidate(chatId);
@@ -344,7 +362,18 @@ public class ProcessingOrderEditHandler(
 				return new HandlerResult { Success = true };
 			}
 
-			var os = await repositoryManager.OrderServiceRepository.FindByCondition(x => x.Id == session.OrderServiceId && x.OrderId == session.OrderId, true).SingleOrDefaultAsync(cancellationToken);
+			var os = await repositoryManager.OrderServiceRepository
+				.FindByCondition(x => x.Id == session.OrderServiceId && x.OrderId == session.OrderId, true)
+				.Include(os => os.OrderServiceEmployees)
+				.Include(os => os.EmployeeEarinig)
+				.Include(os => os.Service)
+				.Include(os => os.Order)
+					.ThenInclude(o => o.DispetcherEarning)
+				.Include(os => os.Order)
+					.ThenInclude(o => o.OrderServices)
+				.Include(os => os.Order)
+					.ThenInclude(o => o.CreatedEmployee)
+				.SingleOrDefaultAsync(cancellationToken);
 			if (os == null)
 			{
 				await telegramBotAnswerService.SendMessageAsync(chatId, "Услуга не найдена.", cancellationToken);
@@ -353,6 +382,13 @@ public class ProcessingOrderEditHandler(
 
 			os.TotalVolume = newVol;
 			os.PriceTotal = os.Price * (decimal)os.TotalVolume;
+
+			// Обновление EmployeeEarning
+			await UpdateEmployeeEarningForOrderService(os, cancellationToken);
+
+			// Обновление DispetcherEarning
+			await UpdateDispetcherEarningForOrder(os.Order, cancellationToken);
+
 			await repositoryManager.SaveAsync(cancellationToken);
 
 			freeOrdersCache.Invalidate(chatId);
@@ -593,6 +629,54 @@ public class ProcessingOrderEditHandler(
 		}
 
 		return new HandlerResult { Success = true };
+	}
+
+	/// <summary>
+	/// Обновляет EmployeeEarning для OrderService после изменения цены или объема
+	/// </summary>
+	private Task UpdateEmployeeEarningForOrderService(OrderService orderService, CancellationToken cancellationToken)
+	{
+		if (orderService.EmployeeEarinig != null)
+		{
+			// Удаляем старый EmployeeEarning
+			repositoryManager.EmployeeEarningRepository.Delete(orderService.EmployeeEarinig);
+		}
+
+		// Создаем новый EmployeeEarning с обновленными данными
+		var createEmployeeEarningDto = new CreateEmployeeEarningDto()
+		{
+			PrecentForMultipleEmployeers = orderService.Service.PrecentForMultipleEmployeers,
+			PrecentLaterOrderForEmployee = orderService.Service.PrecentLaterOrderForEmployee,
+			PrecentLaterOrderForMultipleEmployeers = orderService.Service.PrecentLaterOrderForMultipleEmployeers,
+			StandartPrecentForEmployee = orderService.Service.StandartPrecentForEmployee,
+			OrderServiceEmployeesCount = orderService.OrderServiceEmployees.Count,
+			OrderStartDateTime = orderService.Order.DateStart,
+			TotalPrice = orderService.PriceTotal,
+		};
+
+		orderService.EmployeeEarinig = EmployeeEarinig.CreateEmployeeEarning(createEmployeeEarningDto);
+
+		return Task.CompletedTask;
+	}
+
+	/// <summary>
+	/// Обновляет DispetcherEarning для Order после изменения цены или объема услуги
+	/// </summary>
+	private Task UpdateDispetcherEarningForOrder(Order order, CancellationToken cancellationToken)
+	{
+		if (order.DispetcherEarning != null && order.CreatedEmployee?.DispetcherProcent != null)
+		{
+			// Пересчитываем общую стоимость заявки
+			var orderTotalPrice = order.OrderServices.Sum(os => os.PriceTotal);
+			order.OrderPriceAmount = orderTotalPrice;
+
+			// Обновляем заработок диспетчера
+			order.DispetcherEarning.UpdateDispetcherEarning(
+				order.CreatedEmployee.DispetcherProcent.Value,
+				orderTotalPrice);
+		}
+
+		return Task.CompletedTask;
 	}
 }
 
