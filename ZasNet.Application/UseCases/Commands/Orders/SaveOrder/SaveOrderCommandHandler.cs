@@ -21,6 +21,7 @@ public class SaveOrderCommandHandler(IRepositoryManager repositoryManager,
         var order = await repositoryManager.OrderRepository.FindByCondition(c => c.Id == request.OrderDto.Id, true)
             .Include(c => c.OrderServices).ThenInclude(c => c.OrderServiceCars)
             .Include(c => c.OrderServices).ThenInclude(c => c.OrderServiceEmployees)
+            .Include(c=>c.DispetcherEarning)
             .SingleAsync(cancellationToken);
 
         if (order.IsLocked)
@@ -36,7 +37,9 @@ public class SaveOrderCommandHandler(IRepositoryManager repositoryManager,
 
             // Update order properties
             order.Update(upsertOrderDto);
-
+            var dispetcherProcent = (await repositoryManager.EmployeeRepository.FindByCondition(c => c.Id == request.OrderDto.CreatedUser.Id, false).SingleOrDefaultAsync(cancellationToken))?.DispetcherProcent;
+            order.DispetcherEarning.UpdateDispetcherEarning(dispetcherProcent.Value, order.OrderPriceAmount);
+            
             // Sync OrderServices
             await SyncOrderServices(order, upsertOrderDto.OrderServices, request.OrderDto.OrderServicesDtos, cancellationToken);
 

@@ -21,4 +21,13 @@ public class DispetcherEarning : BaseItem
             EmployeeEarning = priceAmount * precent / 100M
         };
     }
+    
+    public void UpdateDispetcherEarning(decimal precent, decimal priceAmount)
+    {
+        ServiceEmployeePrecent = precent;
+        PrecentEmployeeDescription = "Стандартный процент для диспетчера";
+        EmployeeEarning = priceAmount * precent / 100M;
+    }
+
+
 }
