@@ -100,6 +100,7 @@ namespace ZasNet.Domain.Entities;
             IsAlmazOrder = orderDto.IsAlmazOrder,
             IsCashWasTransferred = orderDto.IsCashWasTransferred,
             CreatedEmployeeId = orderDto.CreatedEmployeeId,
+            DispetcherEarning = orderDto.DispetcherEarning,
         };
     }
 

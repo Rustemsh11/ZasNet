@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ZasNet.Infrastruture.Persistence;
 
@@ -11,9 +12,11 @@ using ZasNet.Infrastruture.Persistence;
 namespace ZasNet.Infrastruture.Migrations
 {
     [DbContext(typeof(ZasNetDbContext))]
-    partial class ZasNetDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251215171458_DispEarning2")]
+    partial class DispEarning2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -225,7 +228,6 @@ namespace ZasNet.Infrastruture.Migrations
                         new
                         {
                             Id = 2,
-                            DispetcherProcent = 2m,
                             Login = "admin",
                             Name = "admin",
                             Password = "$2a$11$TTmUKfiEKsy8HxE2Agg2.eVxlbn/biUtN4lloHIYuqYSovk3pl5sy",

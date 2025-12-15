@@ -14,7 +14,7 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
 
         builder.Property(c => c.Login).IsRequired().HasMaxLength(10);
         builder.Property(c => c.Password).IsRequired();
-
+        builder.Property(c => c.DispetcherProcent);
         builder.HasOne(c => c.Role).WithMany(c => c.Employees).HasForeignKey(c => c.RoleId);
 
         builder.HasData(new Employee()
@@ -33,6 +33,7 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
             Login = "admin",
             Password = "$2a$11$TTmUKfiEKsy8HxE2Agg2.eVxlbn/biUtN4lloHIYuqYSovk3pl5sy",
             RoleId = 1,
+            DispetcherProcent = 2,
         });
     }
 }

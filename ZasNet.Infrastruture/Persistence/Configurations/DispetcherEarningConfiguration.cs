@@ -15,7 +15,7 @@ public class DispetcherEarningConfiguration : IEntityTypeConfiguration<Dispetche
         builder.Property(c => c.EmployeeEarning).IsRequired();
 
         builder.HasOne(c => c.Order)
-            .WithOne()
+            .WithOne(c=>c.DispetcherEarning)
             .HasForeignKey<DispetcherEarning>(c => c.OrderId)
             .OnDelete(DeleteBehavior.Cascade);
     }
