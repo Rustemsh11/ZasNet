@@ -14,5 +14,6 @@ public interface IRepositoryManager
     IRoleRepository RoleRepository { get; }
     IMeasureRepository MeasureRepository { get; }
     IEmployeeEarningRepository EmployeeEarningRepository { get; }
+    IDispetcherEarningRepository DispetcherEarningRepository { get; }
     Task SaveAsync(CancellationToken cancellationToken);
 }

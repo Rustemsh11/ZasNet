@@ -17,6 +17,7 @@ public class ZasNetDbContext: DbContext
     public DbSet<OrderService> OrderServices { get; set; }
     public DbSet<Measure> Measures { get; set; }
     public DbSet<EmployeeEarinig> EmployeeEarnings { get; set; }
+    public DbSet<DispetcherEarning> DispetcherEarnings { get; set; }
 
     public ZasNetDbContext(DbContextOptions<ZasNetDbContext> options)
         : base(options)
@@ -47,5 +48,6 @@ public class ZasNetDbContext: DbContext
         modelBuilder.ApplyConfiguration(new RoleConfiguration());
         modelBuilder.ApplyConfiguration(new MeasureConfiguration());
         modelBuilder.ApplyConfiguration(new EmployeeEarningConfiguration());
+        modelBuilder.ApplyConfiguration(new DispetcherEarningConfiguration());
     }
 }

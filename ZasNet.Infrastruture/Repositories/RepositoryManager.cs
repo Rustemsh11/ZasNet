@@ -18,6 +18,7 @@ public class RepositoryManager : IRepositoryManager
     private readonly Lazy<IRoleRepository> roleRepository;
     private readonly Lazy<IMeasureRepository> measureRepository;
     private readonly Lazy<IEmployeeEarningRepository> employeeEarningRepository;
+    private readonly Lazy<IDispetcherEarningRepository> dispetcherEarningRepository;
 
     public RepositoryManager(ZasNetDbContext zasNetDbContext)
     {
@@ -34,6 +35,7 @@ public class RepositoryManager : IRepositoryManager
         roleRepository = new Lazy<IRoleRepository>(()=> new RoleRepository(context));
         measureRepository = new Lazy<IMeasureRepository>(()=> new MeasureRepository(context));
         employeeEarningRepository = new Lazy<IEmployeeEarningRepository>(()=> new EmployeeEarningRepository(context));
+        dispetcherEarningRepository = new Lazy<IDispetcherEarningRepository>(()=> new DispetcherEarningRepository(context));
     }
 
     public ICarModelRepository CarModelRepository => this.carModelRepository.Value;
@@ -59,6 +61,8 @@ public class RepositoryManager : IRepositoryManager
     public IMeasureRepository MeasureRepository => this.measureRepository.Value;
     
     public IEmployeeEarningRepository EmployeeEarningRepository => this.employeeEarningRepository.Value;
+
+    public IDispetcherEarningRepository DispetcherEarningRepository => this.dispetcherEarningRepository.Value;
 
     public async Task SaveAsync(CancellationToken cancellationToken)
     {

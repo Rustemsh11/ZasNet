@@ -46,6 +46,8 @@ namespace ZasNet.Domain.Entities;
 
 	public Employee? FinishedEmployee { get; set; }
 
+    public DispetcherEarning DispetcherEarning { get; set; }
+
     public class UpsertOrderDto
     {
         public string Client { get; set; }
@@ -75,6 +77,8 @@ namespace ZasNet.Domain.Entities;
         public bool? IsCashWasTransferred { get; set; }
 
         public List<OrderService> OrderServices { get; set; }
+        
+        public DispetcherEarning DispetcherEarning { get; set; }
     }
     
     public static Order Create(UpsertOrderDto orderDto)

@@ -14,6 +14,8 @@ public class Employee : LockedItemBase
 
     public int RoleId { get; set; }
 
+    public decimal? DispetcherProcent {  get; set; }
+
     public Role Role { get; set; }
 
     public ICollection<OrderServiceEmployee> OrderServiceEmployees { get; set; }

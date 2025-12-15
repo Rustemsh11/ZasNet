@@ -62,6 +62,7 @@ public class CreateOrderHandler(
             .FindByCondition(s => serviceIds.Contains(s.Id), false)
             .ToListAsync(cancellationToken);
 
+        var dispetcherPrecent = (await repositoryManager.EmployeeRepository.FindByCondition(c => c.Id == request.OrderDto.CreatedUser.Id, false).Select(c => c.DispetcherProcent).SingleOrDefaultAsync(cancellationToken)) ?? 0M;
         var order = Order.Create(new UpsertOrderDto()
         {
             Client = request.OrderDto.Client,
@@ -78,6 +79,7 @@ public class CreateOrderHandler(
             IsAlmazOrder = request.OrderDto.IsAlmazOrder,
             IsCashWasTransferred = request.OrderDto.IsCashWasTransferred,
             CreatedEmployeeId = request.OrderDto.CreatedUser.Id,
+            DispetcherEarning = DispetcherEarning.CreateDispetcherEarning(dispetcherPrecent, request.OrderDto.OrderPriceAmount)
         });
         
         repositoryManager.OrderRepository.Create(order);
