@@ -33,6 +33,7 @@ public class EmployeeEarinig : BaseItem
         public int OrderServiceEmployeesCount { get; set; }
 
         public DateTime OrderStartDateTime { get; set; }
+        public DateTime OrderEndDateTime { get; set; }
 
         public decimal TotalPrice { get; set; }
     }
@@ -47,7 +48,7 @@ public class EmployeeEarinig : BaseItem
             if (orderService.OrderStartDateTime.TimeOfDay.Hours > TimeSpan.FromHours(18).Hours)
             {
                 precent = orderService.PrecentLaterOrderForMultipleEmployeers;
-                descriptionBuilder = $"Процент за выполнение услуги после 18:00 несколькими сотрудниками";
+                descriptionBuilder = $"Процент за выполнение услуги c 20:00 до 6:00 несколькими сотрудниками";
             }
             else
             {
@@ -57,10 +58,10 @@ public class EmployeeEarinig : BaseItem
         }
         else
         {
-            if (orderService.OrderStartDateTime.TimeOfDay.Hours > TimeSpan.FromHours(18).Hours)
+            if (orderService.OrderStartDateTime.TimeOfDay.Hours > TimeSpan.FromHours(20).Hours && orderService.OrderEndDateTime.TimeOfDay.Hours < TimeSpan.FromHours(60).Hours)
             {
                 precent = orderService.PrecentLaterOrderForEmployee;
-                descriptionBuilder = $"Процент за выполнение услуги после 18:00 1 сотрудником";
+                descriptionBuilder = $"Процент за выполнение услуги c 20:00 до 6:00 1 сотрудником";
             }
         }
 
