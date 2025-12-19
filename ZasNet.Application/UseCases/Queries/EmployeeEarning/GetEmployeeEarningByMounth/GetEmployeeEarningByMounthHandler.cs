@@ -59,7 +59,6 @@ public class GetEmployeeEarningByMounthHandler(IRepositoryManager repositoryMana
             {
                 result.Add(new GetEmployeeEarningByMounthResponse
                 {
-                    Id = ee.Id,
                     OrderId = ee.OrderService.OrderId,
                     Client = ee.OrderService.Order.Client,
                     OrderDateStart = ee.OrderService.Order.DateStart,
@@ -70,9 +69,13 @@ public class GetEmployeeEarningByMounthHandler(IRepositoryManager repositoryMana
                         Id = employee.Employee.Id,
                         Name = employee.Employee.Name
                     },
-                    ServiceEmployeePrecent = ee.ServiceEmployeePrecent,
-                    PrecentEmployeeDescription = ee.PrecentEmployeeDescription,
-                    EmployeeEarning = ee.EmployeeEarning,
+                    EmployeeEarningDto = new CommonDtos.EmployeeEarningDto()
+                    {
+                        EmployeeEarningId = ee.Id,
+                        ServiceEmployeePrecent = ee.ServiceEmployeePrecent,
+                        PrecentEmployeeDescription = ee.PrecentEmployeeDescription,
+                        EmployeeEarning = ee.EmployeeEarning,
+                    },
                     ServiceTotalPrice = ee.OrderService.PriceTotal,
                     TotalVolume = ee.OrderService.TotalVolume
                 });

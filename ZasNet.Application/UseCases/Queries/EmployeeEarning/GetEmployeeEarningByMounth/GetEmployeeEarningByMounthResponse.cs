@@ -8,11 +8,6 @@ namespace ZasNet.Application.UseCases.Queries.EmployeeEarning.GetEmployeeEarning
 public class GetEmployeeEarningByMounthResponse
 {
     /// <summary>
-    /// ID записи о заработке
-    /// </summary>
-    public int Id { get; set; }
-
-    /// <summary>
     /// ID заявки
     /// </summary>
     public int OrderId { get; set; }
@@ -42,20 +37,7 @@ public class GetEmployeeEarningByMounthResponse
     /// </summary>
     public EmployeeDto Employee { get; set; } = new();
 
-    /// <summary>
-    /// Процент для сотрудника
-    /// </summary>
-    public decimal ServiceEmployeePrecent { get; set; }
-
-    /// <summary>
-    /// Описание процента
-    /// </summary>
-    public string? PrecentEmployeeDescription { get; set; }
-
-    /// <summary>
-    /// Заработок сотрудника
-    /// </summary>
-    public decimal EmployeeEarning { get; set; }
+    public EmployeeEarningDto EmployeeEarningDto { get; set; }
 
     /// <summary>
     /// Общая стоимость услуги

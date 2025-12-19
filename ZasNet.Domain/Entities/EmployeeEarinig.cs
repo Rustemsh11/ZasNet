@@ -74,4 +74,11 @@ public class EmployeeEarinig : BaseItem
 
         return orderService.TotalPrice * percentForEmployee/100.0M;
     }
+
+    public void Update(decimal serviceEmployeePrecent, string? precentEmployeeDescription, decimal employeeEarning)
+    {
+        ServiceEmployeePrecent = serviceEmployeePrecent;
+        PrecentEmployeeDescription = precentEmployeeDescription;
+        EmployeeEarning = employeeEarning;
+    }
 }
