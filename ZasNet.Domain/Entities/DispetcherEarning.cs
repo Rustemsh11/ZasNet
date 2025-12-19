@@ -29,5 +29,11 @@ public class DispetcherEarning : BaseItem
         EmployeeEarning = priceAmount * precent / 100M;
     }
 
+    public void Update(decimal serviceEmployeePrecent, string? precentEmployeeDescription, decimal employeeEarning)
+    {
+        ServiceEmployeePrecent = serviceEmployeePrecent;
+        PrecentEmployeeDescription = precentEmployeeDescription;
+        EmployeeEarning = employeeEarning;
+    }
 
 }
