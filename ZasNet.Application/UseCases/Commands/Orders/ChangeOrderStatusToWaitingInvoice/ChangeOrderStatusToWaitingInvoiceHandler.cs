@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using ZasNet.Application.Repository;
 using ZasNet.Application.Services;
 using ZasNet.Application.Services.Telegram;
+using ZasNet.Domain;
 
 namespace ZasNet.Application.UseCases.Commands.Orders.ChangeOrderStatusToWaitingInvoice;
 
@@ -36,7 +37,7 @@ public class ChangeOrderStatusToWaitingInvoiceHandler(
 
         if (request.isNeedInvoiceArgently)
         {
-            var generalLedger = await repositoryManager.EmployeeRepository.FindByCondition(c => c.Role.Name == "Бухгалтер", false).SingleOrDefaultAsync(cancellationToken)
+            var generalLedger = await repositoryManager.EmployeeRepository.FindByCondition(c => c.Role.Id == Constants.GeneralLedgerRole, false).SingleOrDefaultAsync(cancellationToken)
                 ?? throw new InvalidOperationException("Бухгалтер не найден");
 
             if(generalLedger.ChatId != null)

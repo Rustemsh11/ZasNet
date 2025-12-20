@@ -1,11 +1,14 @@
 ﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using ZasNet.Application.Repository;
 using ZasNet.Application.Services;
+using ZasNet.Domain;
 using ZasNet.Domain.Entities;
 
 namespace ZasNet.Application.UseCases.Commands.Users.CreateUser;
 
-public class CreateEmployeeHandler(IRepositoryManager repositoryManager, IPasswordHashService passwordHashService) : IRequestHandler<CreateEmployeeRequest>
+public class CreateEmployeeHandler(IRepositoryManager repositoryManager,
+    IPasswordHashService passwordHashService) : IRequestHandler<CreateEmployeeRequest>
 {
     public async Task Handle(CreateEmployeeRequest request, CancellationToken cancellationToken)
     {
@@ -18,6 +21,12 @@ public class CreateEmployeeHandler(IRepositoryManager repositoryManager, IPasswo
         if(matchs.Count > 0)
         {
             throw new InvalidOperationException("Сотрудник с таким логином уже существует, выберите другой логин");
+        }
+        
+        var buch = await employeeRepo.FindByCondition(c => c.RoleId == Constants.GeneralLedgerRole, false).CountAsync(cancellationToken);
+        if(buch > 1)
+        {
+            throw new InvalidOperationException("Бухгалтер может быть только 1, если это новый бухгалтер, сначало удалите прежднего бугалтера");
         }
 
         var user = Employee.CreateEmployee(request.Name, request.Phone, request.Login, passwordHashService.HashPassword(request.Password), role);

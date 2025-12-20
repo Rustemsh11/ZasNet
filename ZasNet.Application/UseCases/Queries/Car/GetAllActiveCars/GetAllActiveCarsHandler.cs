@@ -9,8 +9,8 @@ public class GetAllActiveCarsHandler(IRepositoryManager repositoryManager) : IRe
 {
     public async Task<List<CarDto>> Handle(GetAllActiveCarsRequest request, CancellationToken cancellationToken)
     {
-        var cars = await repositoryManager.CarRepository.FindByCondition(c=> c.Status == Domain.Enums.CarStatus.Active, false).Include(c => c.CarModel).ToListAsync(cancellationToken);
+        var cars = await repositoryManager.CarRepository.FindByCondition(c=> c.IsDeleted != true && c.Status == Domain.Enums.CarStatus.Active, false).Include(c => c.CarModel).ToListAsync(cancellationToken);
 
-        return cars.Select(c => new CarDto() { Id = c.Id, Name = $"{c.CarModel.Name}({c.Number})" }).ToList();
+        return cars.Select(c => new CarDto() { Id = c.Id, Number = c.Number, CarModel = new CarModelDto() { Id = c.CarModel.Id, Name = c.CarModel.Name } }).ToList();
     }
 }

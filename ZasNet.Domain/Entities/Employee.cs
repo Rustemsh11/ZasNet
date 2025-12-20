@@ -26,6 +26,15 @@ public class Employee : LockedItemBase
     {
         return new Employee { Name = name, Phone = phone, Login = login, Password = password, RoleId = role.Id };
     }
+    
+    public void UpdateEmployee(string name, string? phone, string login, string password, Role role)
+    {
+        this.Name = name;
+        this.Phone = phone;
+        this.Login = login;
+        this.Password = password;
+        this.Role = role;
+    }
 
     public void SetChatId(long chatId)
     {

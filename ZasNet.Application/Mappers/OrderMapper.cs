@@ -57,7 +57,8 @@ public class OrderMapper: Profile
                         Car = new CarDto()
                         {
                             Id =x.CarId,
-                            Name = $"{x.Car.CarModel.Name}({x.Car.Number})",
+                            Number = x.Car.Number,
+                            CarModel = new CarModelDto() { Id = x.Car.CarModel.Id, Name = x.Car.CarModel.Name }
                         },
                         OrderServiceId = c.Id,
                         IsApproved = x.IsApproved,

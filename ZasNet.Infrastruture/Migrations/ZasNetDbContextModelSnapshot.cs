@@ -33,6 +33,9 @@ namespace ZasNet.Infrastruture.Migrations
                     b.Property<int?>("CarModelId")
                         .HasColumnType("int");
 
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime?>("LockedAt")
                         .HasColumnType("datetime2");
 
@@ -62,6 +65,9 @@ namespace ZasNet.Infrastruture.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime?>("LockedAt")
                         .HasColumnType("datetime2");
 
@@ -88,6 +94,9 @@ namespace ZasNet.Infrastruture.Migrations
 
                     b.Property<decimal>("EmployeeEarning")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
@@ -132,6 +141,9 @@ namespace ZasNet.Infrastruture.Migrations
                         .IsRequired()
                         .HasMaxLength(15)
                         .HasColumnType("nvarchar(15)");
+
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<DateTime?>("LockedAt")
                         .HasColumnType("datetime2");
@@ -181,6 +193,9 @@ namespace ZasNet.Infrastruture.Migrations
 
                     b.Property<decimal?>("DispetcherProcent")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<DateTime?>("LockedAt")
                         .HasColumnType("datetime2");
@@ -244,6 +259,9 @@ namespace ZasNet.Infrastruture.Migrations
                     b.Property<decimal>("EmployeeEarning")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<int>("OrderServiceId")
                         .HasColumnType("int");
 
@@ -269,6 +287,9 @@ namespace ZasNet.Infrastruture.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -347,6 +368,9 @@ namespace ZasNet.Infrastruture.Migrations
                     b.Property<bool?>("IsCashWasTransferred")
                         .HasColumnType("bit");
 
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime?>("LockedAt")
                         .HasColumnType("datetime2");
 
@@ -383,6 +407,9 @@ namespace ZasNet.Infrastruture.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<bool?>("IsAlmazService")
+                        .HasColumnType("bit");
+
+                    b.Property<bool?>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<DateTime?>("LockedAt")
@@ -429,6 +456,9 @@ namespace ZasNet.Infrastruture.Migrations
                     b.Property<bool>("IsApproved")
                         .HasColumnType("bit");
 
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<int>("OrderServiceId")
                         .HasColumnType("int");
 
@@ -455,6 +485,9 @@ namespace ZasNet.Infrastruture.Migrations
                     b.Property<bool>("IsApproved")
                         .HasColumnType("bit");
 
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<int>("OrderServiceId")
                         .HasColumnType("int");
 
@@ -474,6 +507,9 @@ namespace ZasNet.Infrastruture.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<DateTime?>("LockedAt")
                         .HasColumnType("datetime2");
@@ -519,6 +555,9 @@ namespace ZasNet.Infrastruture.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<DateTime?>("LockedAt")
                         .HasColumnType("datetime2");

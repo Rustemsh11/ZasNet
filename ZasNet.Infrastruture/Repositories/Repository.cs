@@ -29,20 +29,20 @@ public class Repository<T> : IRepository<T> where T : BaseItem
     {
         if (trackChanges) 
         {
-            return zasNetDbContext.Set<T>();
+            return zasNetDbContext.Set<T>().Where(c=>c.IsDeleted != true);
         }
 
-        return zasNetDbContext.Set<T>().AsNoTracking();
+        return zasNetDbContext.Set<T>().Where(c => c.IsDeleted != true).AsNoTracking();
     }
 
     public IQueryable<T> FindByCondition(Expression<Func<T, bool>> expression, bool trackChanges)
     {
         if (trackChanges)
         {
-            return zasNetDbContext.Set<T>().Where(expression);
+            return zasNetDbContext.Set<T>().Where(c => c.IsDeleted != true).Where(expression);
         }
 
-        return zasNetDbContext.Set<T>().Where(expression).AsNoTracking();
+        return zasNetDbContext.Set<T>().Where(c => c.IsDeleted != true).Where(expression).AsNoTracking();
     }
 
     public void Update(T entity)

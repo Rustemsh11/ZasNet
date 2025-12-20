@@ -14,4 +14,20 @@ public class Car : LockedItemBase
 
     public ICollection<OrderServiceCar> OrderServiceCars { get; set; }
 
+    public static Car Create(string number, CarStatus status, int? carModelId)
+    {
+        return new Car
+        {
+            Number = number,
+            Status = status,
+            CarModelId = carModelId
+        };
+    }
+
+    public void UpdateCar(string number, CarStatus status, int? carModelId)
+    {
+        this.Number = number;
+        this.Status = status;
+        this.CarModelId = carModelId;
+    }
 }

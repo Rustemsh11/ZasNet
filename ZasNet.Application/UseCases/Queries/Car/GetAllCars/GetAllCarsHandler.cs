@@ -11,6 +11,6 @@ public class GetAllCarsHandler(IRepositoryManager repositoryManager) : IRequestH
     {
         var cars = await repositoryManager.CarRepository.FindAll(false).Include(c => c.CarModel).ToListAsync(cancellationToken);
 
-        return cars.Select(c => new CarDto() { Id = c.Id, Name = $"{c.CarModel.Name}({c.Number})" }).ToList();
+        return cars.Select(c => new CarDto() { Id = c.Id, Number = c.Number, CarModel = new CarModelDto() { Id = c.CarModel.Id, Name = c.CarModel.Name } }).ToList();
     }
 }

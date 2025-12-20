@@ -7,9 +7,9 @@ namespace ZasNet.Application.UseCases.Queries.Services.GetServices;
 
 public class GetServicesHandler(IRepositoryManager repositoryManager) : IRequestHandler<GetServicesRequest, List<ServiceDto>>
 {
-    public Task<List<ServiceDto>> Handle(GetServicesRequest request, CancellationToken cancellationToken)
+    public async Task<List<ServiceDto>> Handle(GetServicesRequest request, CancellationToken cancellationToken)
     {
-        return repositoryManager.ServiceRepository.FindAll(false)
+        return await repositoryManager.ServiceRepository.FindAll(false)
             .Include(c => c.Measure)
             .Select(c => new ServiceDto()
             {
