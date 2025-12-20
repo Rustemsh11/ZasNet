@@ -20,6 +20,7 @@ public class CreateOrderHandler(
             {
                 ServiceId = c.ServiceId,
                 Price = c.Price,
+                IsAlmazService = c.IsAlmazService,
                 TotalVolume = c.TotalVolume,
                 PriceTotal = c.Price * (decimal)c.TotalVolume,
                 OrderServiceCars = c.OrderServiceCarDtos

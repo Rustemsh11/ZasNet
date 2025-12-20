@@ -41,6 +41,7 @@ public class OrderMapper: Profile
                     c.Service.PrecentForMultipleEmployeers,
                     c.Service.PrecentLaterOrderForEmployee,
                     c.Service.PrecentLaterOrderForMultipleEmployeers,
+                    c.IsAlmazService ?? false,
                     c.OrderServiceEmployees.Select(x=> new OrderServiceEmployeeDto() 
                     {
                         Employee = new EmployeeDto()
@@ -83,10 +84,10 @@ public class OrderMapper: Profile
                 { 
                     Id = c.Id,
                     ServiceId = c.ServiceId, 
-                    Price = c.Price, 
+                    Price = c.Price,
                     TotalVolume = c.TotalVolume, 
-                    PriceTotal = 
-                    c.Price * (decimal)c.TotalVolume, 
+                    PriceTotal = c.Price * (decimal)c.TotalVolume, 
+                    IsAlmazService = c.IsAlmazService,
                     OrderId = src.Id,
                     OrderServiceCars = c.OrderServiceCarDtos.Select(c=> new OrderServiceCar()
                     {

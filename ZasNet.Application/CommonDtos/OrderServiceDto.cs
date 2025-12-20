@@ -9,5 +9,6 @@ public record OrderServiceDto(
     decimal PrecentForMultipleEmployeers,
     decimal PrecentLaterOrderForEmployee,
     decimal PrecentLaterOrderForMultipleEmployeers,
+    bool IsAlmazService,
     List<OrderServiceEmployeeDto> OrderServiceEmployeeDtos,
     List<OrderServiceCarDto> OrderServiceCarDtos);

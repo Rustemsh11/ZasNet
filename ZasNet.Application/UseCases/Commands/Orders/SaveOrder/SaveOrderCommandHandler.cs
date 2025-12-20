@@ -106,6 +106,7 @@ public class SaveOrderCommandHandler(IRepositoryManager repositoryManager,
                 existing.Price = incoming.Price;
                 existing.TotalVolume = incoming.TotalVolume;
                 existing.PriceTotal = incoming.PriceTotal;
+                existing.IsAlmazService = incoming.IsAlmazService;
 
                 // Sync nested collections
                 SyncOrderServiceEmployees(existing, incoming.OrderServiceEmployees);

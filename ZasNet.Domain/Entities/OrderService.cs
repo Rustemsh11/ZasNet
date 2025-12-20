@@ -12,6 +12,8 @@ public class OrderService : LockedItemBase
 
     public decimal PriceTotal { get; set;}
 
+    public bool? IsAlmazService { get; set; }
+
     public Order Order { get; set; }
 
     public Service Service { get; set; }
