@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using ZasNet.Application.CommonDtos;
 using ZasNet.Application.Repository;
 using ZasNet.Domain.Entities;
 
@@ -9,9 +10,9 @@ namespace ZasNet.Application.UseCases.Queries.DispetcherEarnings.GetDispetcherEa
 /// Обработчик запроса на получение заработков диспетчеров за месяц с фильтрацией
 /// </summary>
 public class GetDispetcherEarningByMounthHandler(IRepositoryManager repositoryManager)
-    : IRequestHandler<GetDispetcherEarningByMounthRequest, List<GetDispetcherEarningByMounthResponse>>
+    : IRequestHandler<GetDispetcherEarningByMounthRequest, List<DispetcherEarningByFilterDto>>
 {
-    public async Task<List<GetDispetcherEarningByMounthResponse>> Handle(
+    public async Task<List<DispetcherEarningByFilterDto>> Handle(
         GetDispetcherEarningByMounthRequest request,
         CancellationToken cancellationToken)
     {
@@ -38,7 +39,7 @@ public class GetDispetcherEarningByMounthHandler(IRepositoryManager repositoryMa
             .ToListAsync(cancellationToken);
 
         // Маппим результаты
-        var result = earnings.Select(de => new GetDispetcherEarningByMounthResponse
+        var result = earnings.Select(de => new DispetcherEarningByFilterDto
         {
             Id = de.Id,
             OrderId = de.OrderId,

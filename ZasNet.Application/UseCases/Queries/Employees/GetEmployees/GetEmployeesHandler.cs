@@ -18,6 +18,7 @@ public class GetEmployeesHandler(IRepositoryManager repositoryManager) : IReques
             Name = c.Name,
             Login = c.Login,
             Password = c.Password,
+            DispetcherProcent = c.DispetcherProcent,
             Role = new RoleDto()
             {
                 Id = c.Role.Id,

@@ -7,5 +7,6 @@ public record CreateEmployeeRequest(
         string? Phone,
         string Login,
         string Password,
+        decimal? DispetcherProcent,
         int RoleId
     ) : IRequest;

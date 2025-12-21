@@ -22,7 +22,7 @@ public class UpdateEmployeeHandler(IRepositoryManager repositoryManager,
             throw new InvalidOperationException($"Сотрудника с id: {request.Id} не существует");
         }
 
-        employee.UpdateEmployee(request.Name, request.Phone, request.Login, passwordHashService.HashPassword(request.Password), role);
+        employee.UpdateEmployee(request.Name, request.Phone, request.Login, passwordHashService.HashPassword(request.Password), request.DispetcherProcent, role);
 
         employeeRepo.Update(employee);
 

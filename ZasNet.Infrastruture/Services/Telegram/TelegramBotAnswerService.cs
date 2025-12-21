@@ -161,4 +161,23 @@ public class TelegramBotAnswerService : ITelegramBotAnswerService
             return InlineKeyboardButton.WithCallbackData(button.Text, button.CallbackData);
         }
     }
+
+    public async Task SendDocumentAsync(long chatId, byte[] fileBytes, string fileName, string? caption = null, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            using var stream = new MemoryStream(fileBytes);
+            var inputFile = InputFile.FromStream(stream, fileName);
+            
+            await telegramBotClient.SendDocument(
+                chatId: new ChatId(chatId),
+                document: inputFile,
+                caption: caption,
+                cancellationToken: cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // add logger
+        }
+    }
 }

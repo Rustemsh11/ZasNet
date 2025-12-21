@@ -1,11 +1,12 @@
 using MediatR;
+using ZasNet.Application.CommonDtos;
 
 namespace ZasNet.Application.UseCases.Queries.DispetcherEarnings.GetDispetcherEarningByMounth;
 
 /// <summary>
 /// Запрос на получение заработков диспетчеров за месяц с фильтрацией
 /// </summary>
-public class GetDispetcherEarningByMounthRequest : IRequest<List<GetDispetcherEarningByMounthResponse>>
+public class GetDispetcherEarningByMounthRequest : IRequest<List<DispetcherEarningByFilterDto>>
 {
     /// <summary>
     /// Год (обязательный)

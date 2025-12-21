@@ -5,6 +5,7 @@ using ZasNet.Application.Services.Telegram;
 using ZasNet.Domain.Entities;
 using static ZasNet.Domain.Entities.EmployeeEarinig;
 using static ZasNet.Domain.Entities.Order;
+using static ZasNet.Domain.Entities.DispetcherEarning;
 
 namespace ZasNet.Application.UseCases.Commands.Orders.CreateOrder;
 
@@ -80,7 +81,7 @@ public class CreateOrderHandler(
             IsAlmazOrder = request.OrderDto.IsAlmazOrder,
             IsCashWasTransferred = request.OrderDto.IsCashWasTransferred,
             CreatedEmployeeId = request.OrderDto.CreatedUser.Id,
-            DispetcherEarning = DispetcherEarning.CreateDispetcherEarning(dispetcherPrecent, request.OrderDto.OrderPriceAmount)
+            DispetcherEarning = CreateDispetcherEarning(dispetcherPrecent, request.OrderDto.OrderPriceAmount)
         });
         
         repositoryManager.OrderRepository.Create(order);

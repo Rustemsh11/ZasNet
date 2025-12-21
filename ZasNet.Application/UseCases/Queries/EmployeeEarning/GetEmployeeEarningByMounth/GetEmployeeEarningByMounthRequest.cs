@@ -1,11 +1,12 @@
 using MediatR;
+using ZasNet.Application.CommonDtos;
 
 namespace ZasNet.Application.UseCases.Queries.EmployeeEarning.GetEmployeeEarningByMounth;
 
 /// <summary>
 /// Запрос на получение заработков сотрудников за месяц с фильтрацией
 /// </summary>
-public class GetEmployeeEarningByMounthRequest : IRequest<List<GetEmployeeEarningByMounthResponse>>
+public class GetEmployeeEarningByMounthRequest : IRequest<List<EmployeeEarningByFilterDto>>
 {
     /// <summary>
     /// Год (обязательный)

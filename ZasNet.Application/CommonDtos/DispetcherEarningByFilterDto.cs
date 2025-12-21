@@ -1,11 +1,9 @@
-﻿using ZasNet.Application.CommonDtos;
-
-namespace ZasNet.Application.UseCases.Queries.DispetcherEarnings.GetDispetcherEarningByMounth;
+﻿namespace ZasNet.Application.CommonDtos;
 
 /// <summary>
 /// Ответ с данными о заработке диспетчера
 /// </summary>
-public class GetDispetcherEarningByMounthResponse
+public class DispetcherEarningByFilterDto
 {
     /// <summary>
     /// ID записи о заработке

@@ -12,7 +12,7 @@ public class Employee : LockedItemBase
 
     public string Password { get; set; }
 
-    public int RoleId { get; set; }
+    public int RoleId { get; set; } 
 
     public decimal? DispetcherProcent {  get; set; }
 
@@ -22,18 +22,19 @@ public class Employee : LockedItemBase
 
     public ICollection<Order> CreatedByEmployeeOrder { get; set; }
 
-    public static Employee CreateEmployee(string name, string? phone, string login, string password, Role role)
+    public static Employee CreateEmployee(string name, string? phone, string login, string password, decimal? dispetcherProcent, Role role)
     {
-        return new Employee { Name = name, Phone = phone, Login = login, Password = password, RoleId = role.Id };
+        return new Employee { Name = name, Phone = phone, Login = login, Password = password, DispetcherProcent = dispetcherProcent, RoleId = role.Id };
     }
     
-    public void UpdateEmployee(string name, string? phone, string login, string password, Role role)
+    public void UpdateEmployee(string name, string? phone, string login, string password, decimal? dispetcherProcent, Role role)
     {
         this.Name = name;
         this.Phone = phone;
         this.Login = login;
         this.Password = password;
         this.Role = role;
+        this.DispetcherProcent = dispetcherProcent;
     }
 
     public void SetChatId(long chatId)

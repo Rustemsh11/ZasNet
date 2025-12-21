@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using ZasNet.Application.CommonDtos;
 using ZasNet.Application.Repository;
 using ZasNet.Domain.Entities;
 
@@ -9,9 +10,9 @@ namespace ZasNet.Application.UseCases.Queries.EmployeeEarning.GetEmployeeEarning
 /// Обработчик запроса на получение заработков сотрудников за месяц с фильтрацией
 /// </summary>
 public class GetEmployeeEarningByMounthHandler(IRepositoryManager repositoryManager)
-    : IRequestHandler<GetEmployeeEarningByMounthRequest, List<GetEmployeeEarningByMounthResponse>>
+    : IRequestHandler<GetEmployeeEarningByMounthRequest, List<EmployeeEarningByFilterDto>>
 {
-    public async Task<List<GetEmployeeEarningByMounthResponse>> Handle(
+    public async Task<List<EmployeeEarningByFilterDto>> Handle(
         GetEmployeeEarningByMounthRequest request,
         CancellationToken cancellationToken)
     {
@@ -41,7 +42,7 @@ public class GetEmployeeEarningByMounthHandler(IRepositoryManager repositoryMana
             .ToListAsync(cancellationToken);
 
         // Маппим результаты - для каждого сотрудника создаем отдельную запись
-        var result = new List<GetEmployeeEarningByMounthResponse>();
+        var result = new List<EmployeeEarningByFilterDto>();
         
         foreach (var ee in earnings)
         {
@@ -57,7 +58,7 @@ public class GetEmployeeEarningByMounthHandler(IRepositoryManager repositoryMana
             // Для каждого сотрудника, назначенного на OrderService, создаем отдельную запись
             foreach (var employee in employeesToInclude)
             {
-                result.Add(new GetEmployeeEarningByMounthResponse
+                result.Add(new EmployeeEarningByFilterDto
                 {
                     OrderId = ee.OrderService.OrderId,
                     Client = ee.OrderService.Order.Client,

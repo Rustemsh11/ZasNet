@@ -29,7 +29,7 @@ public class CreateEmployeeHandler(IRepositoryManager repositoryManager,
             throw new InvalidOperationException("Бухгалтер может быть только 1, если это новый бухгалтер, сначало удалите прежднего бугалтера");
         }
 
-        var user = Employee.CreateEmployee(request.Name, request.Phone, request.Login, passwordHashService.HashPassword(request.Password), role);
+        var user = Employee.CreateEmployee(request.Name, request.Phone, request.Login, passwordHashService.HashPassword(request.Password), request.DispetcherProcent, role);
 
         employeeRepo.Create(user);
 

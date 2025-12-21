@@ -69,6 +69,8 @@ builder.Services.AddSingleton<IUserSessionCache, UserSessionCache>();
 builder.Services.AddScoped<IOrderServiceEmployeeApprovalService, OrderServiceEmployeeApprovalService>();
 builder.Services.AddScoped<ITelegramFileService, TelegramFileService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<IEmployeeEarningReportService, EmployeeEarningReportService>();
+builder.Services.AddScoped<IDispetcherEarningReportService, DispetcherEarningReportService>();
 
 builder.Services.AddScoped<ITelegramMessageHandler, StartCommandHandler>();
 builder.Services.AddScoped<ITelegramMessageHandler, SaveUserChatHandler>();

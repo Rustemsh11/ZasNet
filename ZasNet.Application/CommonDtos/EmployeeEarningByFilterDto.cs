@@ -1,11 +1,9 @@
-using ZasNet.Application.CommonDtos;
-
-namespace ZasNet.Application.UseCases.Queries.EmployeeEarning.GetEmployeeEarningByMounth;
+namespace ZasNet.Application.CommonDtos;
 
 /// <summary>
 /// Ответ с данными о заработке сотрудника
 /// </summary>
-public class GetEmployeeEarningByMounthResponse
+public class EmployeeEarningByFilterDto
 {
     /// <summary>
     /// ID заявки

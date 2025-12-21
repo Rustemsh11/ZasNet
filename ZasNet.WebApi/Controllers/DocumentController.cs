@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using ZasNet.Application.UseCases.Commands.Document.AddDocument;
+using ZasNet.Application.UseCases.Commands.Document.DeleteDocument;
 using ZasNet.Application.UseCases.Queries.Document.DownloadDocument;
 using ZasNet.Application.UseCases.Queries.Document.ViewDocument;
 
@@ -28,5 +29,13 @@ public class DocumentController(IMediator mediator) : ControllerBase
         CancellationToken cancellationToken)
     {
         await mediator.Send(addDocumentCommand, cancellationToken);
+    }
+    
+    [HttpDelete]
+    public async Task DeleteDocument(
+        [FromBody] DeleteDocumentCommand deleteDocumentCommand,
+        CancellationToken cancellationToken)
+    {
+        await mediator.Send(deleteDocumentCommand, cancellationToken);
     }
 }
