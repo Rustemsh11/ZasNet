@@ -19,9 +19,9 @@ public class SaveOrderCommandHandler(IRepositoryManager repositoryManager,
     public async Task<string> Handle(SaveOrderCommand request, CancellationToken cancellationToken)
     {
         var order = await repositoryManager.OrderRepository.FindByCondition(c => c.Id == request.OrderDto.Id, true)
+            .Include(c=>c.DispetcherEarning)
             .Include(c => c.OrderServices).ThenInclude(c => c.OrderServiceCars)
             .Include(c => c.OrderServices).ThenInclude(c => c.OrderServiceEmployees)
-            .Include(c=>c.DispetcherEarning)
             .SingleAsync(cancellationToken);
 
         if (order.IsLocked)
