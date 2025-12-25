@@ -5,7 +5,7 @@ using ZasNet.Application.UseCases.Queries.EarningAnalytics.GetCarEarningAnalytic
 using ZasNet.Application.UseCases.Queries.EarningAnalytics.GetServiceEarningAnalytics;
 using ZasNet.Application.UseCases.Queries.EarningAnalytics.GetDriverEarningAnalytics;
 using ZasNet.Application.UseCases.Queries.EarningAnalytics.GetDispatcherEarningAnalytics;
-using ZasNet.Application.UseCases.Queries.EarningAnalytics.GetDailyEarnings;
+using ZasNet.Application.UseCases.Queries.EarningAnalytics.GetZasNetEarning;
 using ZasNet.Application.UseCases.Queries.EarningAnalytics.GetServiceEarningByPeriod;
 using ZasNet.Application.UseCases.Queries.EarningAnalytics.GetCarEarningByPeriod;
 using ZasNet.Application.UseCases.Queries.EarningAnalytics.GetDriverEarningByPeriod;
@@ -87,15 +87,20 @@ public class EarningAnalyticsController(IMediator mediator) : ControllerBase
     }
 
     /// <summary>
-    /// Получить заработок по дням за период
+    /// Получить прибыль компании по периодам (день, месяц, год)
     /// </summary>
     /// <remarks>
-    /// Возвращает словарь, где ключ - дата, значение - общая стоимость заявок (OrderPriceAmount) за этот день.
-    /// Все дни в диапазоне включены, даже если заработок равен нулю.
+    /// Возвращает список прибыли компании, сгруппированный по указанному периоду:
+    /// - Day (1): группировка по дням
+    /// - Month (2): группировка по месяцам
+    /// - Year (3): группировка по годам
+    /// 
+    /// Параметр GroupPeriod определяет тип группировки.
+    /// Все периоды в диапазоне включены, даже если прибыль равна нулю.
     /// </remarks>
-    [HttpGet("daily")]
-    public async Task<Dictionary<DateTime, decimal>> GetDailyEarnings(
-        [FromQuery] GetDailyEarningsRequest request,
+    [HttpGet("zasnet-earning")]
+    public async Task<List<ZasNetEarningByPeriodDto>> GetZasNetEarning(
+        [FromQuery] GetZasNetEarningRequest request,
         CancellationToken cancellationToken)
     {
         return await mediator.Send(request, cancellationToken);
