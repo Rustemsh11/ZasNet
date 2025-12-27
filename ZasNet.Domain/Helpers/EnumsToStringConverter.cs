@@ -26,6 +26,10 @@ public static class EnumsToStringConverter
         {
             return "Ожидание счета";
         }
+        else if (orderStatus == OrderStatus.SendingPayment)
+        {
+            return "Необходимо отправка счета клиенту";
+        }
         else if (orderStatus == OrderStatus.AwaitingPayment)
         {
             return "Ожидание оплаты";

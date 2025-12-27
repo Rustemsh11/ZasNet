@@ -15,9 +15,9 @@ public class DeleteOrderHandler(IRepositoryManager repositoryManager) : IRequest
             throw new ArgumentException($"Заявки с id {request.Id} не найдено");
         }
         
-        if(order.Status == Domain.Enums.OrderStatus.AwaitingPayment || order.Status == Domain.Enums.OrderStatus.Closed)
+        if(order.Status == Domain.Enums.OrderStatus.SendingPayment || order.Status == Domain.Enums.OrderStatus.AwaitingPayment || order.Status == Domain.Enums.OrderStatus.Closed)
         {
-            throw new InvalidOperationException("Заявку в статусе [Ожидает оплату] или [Закрыт] нельзя удалить");
+            throw new InvalidOperationException("Заявку в статусе [Ожидает отправки счета] [Ожидает оплату] или [Закрыт] нельзя удалить");
         }
 
         repositoryManager.OrderRepository.Delete(order);

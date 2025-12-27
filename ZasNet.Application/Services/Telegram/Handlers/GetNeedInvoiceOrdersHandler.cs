@@ -281,7 +281,7 @@ public class GetNeedInvoiceOrdersHandler(
 			}
 
 			var order = await repositoryManager.OrderRepository.FindByCondition(c => c.Id == orderId, true).SingleAsync(cancellationToken);
-			order.UpdateStatus(OrderStatus.AwaitingPayment);
+			order.UpdateStatus(OrderStatus.SendingPayment);
 
 			await repositoryManager.SaveAsync(cancellationToken);
 

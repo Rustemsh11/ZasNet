@@ -7,6 +7,7 @@ public enum OrderStatus
     Processing = 2,
     Finished = 3,
     CreatingInvoice = 4,
-    AwaitingPayment = 5,
-    Closed = 6,
+    SendingPayment = 5,
+    AwaitingPayment = 6,
+    Closed = 7,
 }
