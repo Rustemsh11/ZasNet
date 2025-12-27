@@ -610,7 +610,7 @@ public class ProcessingOrderEditHandler(
 				}
 			}
 
-			if (!hasWorkReport)
+			if (!hasWorkReport && (order.PaymentType == PaymentType.CashWithVat || order.PaymentType == PaymentType.CashWithoutVat))
 			{
 				await telegramBotAnswerService.SendMessageAsync(chatId, "Нельзя завершить заявку без фотоотчёта. Отправьте фото и нажмите «Готово», либо прикрепите фото и повторите.", cancellationToken);
 				return new HandlerResult { Success = true };

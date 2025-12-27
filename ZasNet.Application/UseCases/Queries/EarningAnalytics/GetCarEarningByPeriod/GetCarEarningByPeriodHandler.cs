@@ -34,12 +34,17 @@ public class GetCarEarningByPeriodHandler(IRepositoryManager repositoryManager)
 
         var orderServiceCars = await query.ToListAsync(cancellationToken);
 
+        // Создаем словарь с количеством машин для каждой услуги
+        var carsPerService = orderServiceCars
+            .GroupBy(osc => osc.OrderServiceId)
+            .ToDictionary(g => g.Key, g => g.Count());
+
         // Группировка в зависимости от выбранного типа периода
         return request.GroupPeriod switch
         {
-            GroupPeriod.Day => GetDailyEarnings(orderServiceCars),
-            GroupPeriod.Month => GetMonthlyEarnings(orderServiceCars),
-            GroupPeriod.Year => GetYearlyEarnings(orderServiceCars),
+            GroupPeriod.Day => GetDailyEarnings(orderServiceCars, carsPerService),
+            GroupPeriod.Month => GetMonthlyEarnings(orderServiceCars, carsPerService),
+            GroupPeriod.Year => GetYearlyEarnings(orderServiceCars, carsPerService),
             _ => throw new ArgumentException($"Неизвестный тип периода: {request.GroupPeriod}")
         };
     }
@@ -47,7 +52,7 @@ public class GetCarEarningByPeriodHandler(IRepositoryManager repositoryManager)
     /// <summary>
     /// Группировка по дням
     /// </summary>
-    private List<CarEarningByPeriodDto> GetDailyEarnings(List<OrderServiceCar> orderServiceCars)
+    private List<CarEarningByPeriodDto> GetDailyEarnings(List<OrderServiceCar> orderServiceCars, Dictionary<int, int> carsPerService)
     {
         // Группируем по машинам и дням, избегая двойного подсчета услуг
         var processedServices = new HashSet<int>();
@@ -70,7 +75,9 @@ public class GetCarEarningByPeriodHandler(IRepositoryManager repositoryManager)
                         continue;
 
                     processedServices.Add(osc.OrderServiceId);
-                    totalEarning += osc.OrderService.PriceTotal;
+                    // Делим PriceTotal на количество машин, выполняющих эту услугу
+                    var carsCount = carsPerService[osc.OrderServiceId];
+                    totalEarning += osc.OrderService.PriceTotal / carsCount;
                 }
 
                 return new CarEarningByPeriodDto
@@ -93,7 +100,7 @@ public class GetCarEarningByPeriodHandler(IRepositoryManager repositoryManager)
     /// <summary>
     /// Группировка по месяцам
     /// </summary>
-    private List<CarEarningByPeriodDto> GetMonthlyEarnings(List<OrderServiceCar> orderServiceCars)
+    private List<CarEarningByPeriodDto> GetMonthlyEarnings(List<OrderServiceCar> orderServiceCars, Dictionary<int, int> carsPerService)
     {
         var processedServices = new HashSet<int>();
         var grouped = orderServiceCars
@@ -117,7 +124,9 @@ public class GetCarEarningByPeriodHandler(IRepositoryManager repositoryManager)
                         continue;
 
                     processedServices.Add(osc.OrderServiceId);
-                    totalEarning += osc.OrderService.PriceTotal;
+                    // Делим PriceTotal на количество машин, выполняющих эту услугу
+                    var carsCount = carsPerService[osc.OrderServiceId];
+                    totalEarning += osc.OrderService.PriceTotal / carsCount;
                 }
 
                 return new CarEarningByPeriodDto
@@ -140,7 +149,7 @@ public class GetCarEarningByPeriodHandler(IRepositoryManager repositoryManager)
     /// <summary>
     /// Группировка по годам
     /// </summary>
-    private List<CarEarningByPeriodDto> GetYearlyEarnings(List<OrderServiceCar> orderServiceCars)
+    private List<CarEarningByPeriodDto> GetYearlyEarnings(List<OrderServiceCar> orderServiceCars, Dictionary<int, int> carsPerService)
     {
         var processedServices = new HashSet<int>();
         var grouped = orderServiceCars
@@ -163,7 +172,9 @@ public class GetCarEarningByPeriodHandler(IRepositoryManager repositoryManager)
                         continue;
 
                     processedServices.Add(osc.OrderServiceId);
-                    totalEarning += osc.OrderService.PriceTotal;
+                    // Делим PriceTotal на количество машин, выполняющих эту услугу
+                    var carsCount = carsPerService[osc.OrderServiceId];
+                    totalEarning += osc.OrderService.PriceTotal / carsCount;
                 }
 
                 return new CarEarningByPeriodDto

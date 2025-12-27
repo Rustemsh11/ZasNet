@@ -1,22 +1,25 @@
-﻿using ZasNet.Application.Repository;
+using ZasNet.Application.Repository;
 using Microsoft.EntityFrameworkCore;
 using ZasNet.Domain.Interfaces;
 using ZasNet.Domain.Telegram;
 using System.Text;
+using ZasNet.Domain;
+using static ZasNet.Domain.Entities.EmployeeEarinig;
+using ZasNet.Domain.Entities;
 
 namespace ZasNet.Application.Services.Telegram.Handlers;
 
 /// <summary>
-/// Обработчик для изменения машин с множественным выбором
+/// Обработчик для изменения водителей с множественным выбором
 /// </summary>
-public class ChangeOrderServiceCarsHandler(
+public class ChangeOrderServiceEmployeesHandler(
 	IRepositoryManager repositoryManager,
-	ITelegramBotAnswerService telegramBotAnswerService) : ITelegramMessageHandler
+    ITelegramBotAnswerService telegramBotAnswerService) : ITelegramMessageHandler
 {
 	public bool CanHandle(TelegramUpdate telegramUpdate)
 	{
 		var data = telegramUpdate?.CallbackQuery?.Data;
-		if (!string.IsNullOrWhiteSpace(data) && data.StartsWith("changeorderservicecar:", StringComparison.OrdinalIgnoreCase))
+		if (!string.IsNullOrWhiteSpace(data) && data.StartsWith("changemployees:", StringComparison.OrdinalIgnoreCase))
 		{
 			return true;
 		}
@@ -31,26 +34,26 @@ public class ChangeOrderServiceCarsHandler(
 		var data = telegramUpdate.CallbackQuery?.Data ?? string.Empty;
 		var parts = data.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-		// Supported callbacks:
-		// changeorderservicecar:{orderId} - начальная страница
-		// changeorderservicecar:{orderId}:page:{serviceIndex1based} - навигация по услугам
-		// changeorderservicecar:{orderId}:service:{orderServiceId}:toggle:car:{carId}:index:{serviceIndex1based} - toggle машины
-		// changeorderservicecar:{orderId}:service:{orderServiceId}:confirm:index:{serviceIndex1based} - подтверждение выбора
+        // Supported callbacks:
+        // changemployees:{orderId} - начальная страница
+        // changemployees:{orderId}:page:{serviceIndex1based} - навигация по услугам
+        // changemployees:{orderId}:service:{orderServiceId}:toggle:employee:{employeeId}:index:{serviceIndex1based} - toggle водителя
+        // changemployees:{orderId}:service:{orderServiceId}:confirm:index:{serviceIndex1based} - подтверждение выбора
 
-		if (parts.Length >= 2 && int.TryParse(parts[1], out var orderId))
+        if (parts.Length >= 2 && int.TryParse(parts[1], out var orderId))
 		{
-			// Toggle car selection
-			if (parts.Contains("toggle", StringComparer.OrdinalIgnoreCase) && parts.Contains("car", StringComparer.OrdinalIgnoreCase))
+			// Toggle employee selection
+			if (parts.Contains("toggle", StringComparer.OrdinalIgnoreCase) && parts.Contains("employee", StringComparer.OrdinalIgnoreCase))
 			{
 				int orderServiceId = 0;
-				int carId = 0;
+				int employeeId = 0;
 
 				int serviceIdx = Array.FindIndex(parts, p => p.Equals("service", StringComparison.OrdinalIgnoreCase));
-				int carIdx = Array.FindIndex(parts, p => p.Equals("car", StringComparison.OrdinalIgnoreCase));
+				int employeeIdx = Array.FindIndex(parts, p => p.Equals("employee", StringComparison.OrdinalIgnoreCase));
 				int indexIdx = Array.FindIndex(parts, p => p.Equals("index", StringComparison.OrdinalIgnoreCase));
 
 				if (serviceIdx >= 0 && serviceIdx + 1 < parts.Length) int.TryParse(parts[serviceIdx + 1], out orderServiceId);
-				if (carIdx >= 0 && carIdx + 1 < parts.Length) int.TryParse(parts[carIdx + 1], out carId);
+				if (employeeIdx >= 0 && employeeIdx + 1 < parts.Length) int.TryParse(parts[employeeIdx + 1], out employeeId);
 
 				var targetServiceIndex0 = 0;
 				if (indexIdx >= 0 && indexIdx + 1 < parts.Length && int.TryParse(parts[indexIdx + 1], out var idxParsed) && idxParsed > 0)
@@ -58,9 +61,9 @@ public class ChangeOrderServiceCarsHandler(
 					targetServiceIndex0 = idxParsed - 1;
 				}
 
-				if (orderServiceId > 0 && carId > 0)
+				if (orderServiceId > 0 && employeeId > 0)
 				{
-					await ToggleCarAsync(chatId, orderId, orderServiceId, carId, cancellationToken);
+					await ToggleEmployeeAsync(chatId, orderId, orderServiceId, employeeId, cancellationToken);
 					await SendServicePageAsync(chatId, orderId, targetServiceIndex0, cancellationToken);
 					return new HandlerResult { Success = true };
 				}
@@ -120,7 +123,7 @@ public class ChangeOrderServiceCarsHandler(
 		return new HandlerResult { Success = false };
 	}
 
-	private async Task ToggleCarAsync(long chatId, int orderId, int orderServiceId, int carId, CancellationToken cancellationToken)
+	private async Task ToggleEmployeeAsync(long chatId, int orderId, int orderServiceId, int employeeId, CancellationToken cancellationToken)
 	{
 		var employee = await repositoryManager.EmployeeRepository
 			.FindByCondition(e => e.ChatId == chatId, true)
@@ -144,27 +147,49 @@ public class ChangeOrderServiceCarsHandler(
 
 		try
 		{
-			// Check if car already assigned
-			var existingAssignment = await repositoryManager.OrderCarRepository
-				.FindByCondition(osc => osc.OrderServiceId == orderServiceId && osc.CarId == carId, true)
+            // Check if employee already assigned
+            var orderService = await repositoryManager.OrderServiceRepository
+				.FindByCondition(ose => ose.Id == orderServiceId, true)
+				.Include(c=>c.Service)
+				.Include(c=>c.Order)
+				.Include(c=>c.OrderServiceEmployees)
+				.Include(c=>c.EmployeeEarinig)
 				.SingleOrDefaultAsync(cancellationToken);
 
-			if (existingAssignment != null)
+			var orderServiceEmployee = orderService.OrderServiceEmployees.SingleOrDefault(c => c.EmployeeId == employeeId);
+
+
+            if (orderServiceEmployee != null)
 			{
 				// Remove assignment (toggle off)
-				repositoryManager.OrderCarRepository.Delete(existingAssignment);
-			}
+				repositoryManager.OrderEmployeeRepository.Delete(orderServiceEmployee);
+				if(orderService.OrderServiceEmployees.Count == 1)
+				{
+                    AddNewEmployee(orderServiceId, Constants.UnknowingEmployeeId, orderService);
+                }
+				else
+				{
+					var createEmployeeEarningDto = new CreateEmployeeEarningDto()
+					{
+						PrecentForMultipleEmployeers = orderService.Service.PrecentForMultipleEmployeers,
+						PrecentLaterOrderForEmployee = orderService.Service.PrecentLaterOrderForEmployee,
+						PrecentLaterOrderForMultipleEmployeers = orderService.Service.PrecentLaterOrderForMultipleEmployeers,
+						StandartPrecentForEmployee = orderService.Service.StandartPrecentForEmployee,
+						OrderServiceEmployeesCount = orderService.OrderServiceEmployees.Count - 1,
+						OrderStartDateTime = orderService.Order.DateStart,
+						TotalPrice = orderService.PriceTotal,
+					};
+					orderService.EmployeeEarinig.Update(createEmployeeEarningDto);
+				}
+
+            }
 			else
 			{
-				// Add assignment (toggle on)
-				var newAssignment = new Domain.Entities.OrderServiceCar
-				{
-					OrderServiceId = orderServiceId,
-					CarId = carId,
-					IsApproved = true
-				};
-				repositoryManager.OrderCarRepository.Create(newAssignment);
-			}
+				AddNewEmployee(orderServiceId, employeeId, orderService);
+
+            }
+            
+			repositoryManager.OrderServiceRepository.Update(orderService);
 
 			await repositoryManager.SaveAsync(cancellationToken);
 		}
@@ -174,13 +199,38 @@ public class ChangeOrderServiceCarsHandler(
 		}
 	}
 
+	private void AddNewEmployee(int orderServiceId, int employeeId, OrderService orderService)
+	{
+        // Add assignment (toggle on)
+        var newAssignment = new Domain.Entities.OrderServiceEmployee
+        {
+            OrderServiceId = orderServiceId,
+            EmployeeId = employeeId,
+            IsApproved = true,
+        };
+        repositoryManager.OrderEmployeeRepository.Create(newAssignment);
+
+        var createEmployeeEarningDto = new CreateEmployeeEarningDto()
+        {
+            PrecentForMultipleEmployeers = orderService.Service.PrecentForMultipleEmployeers,
+            PrecentLaterOrderForEmployee = orderService.Service.PrecentLaterOrderForEmployee,
+            PrecentLaterOrderForMultipleEmployeers = orderService.Service.PrecentLaterOrderForMultipleEmployeers,
+            StandartPrecentForEmployee = orderService.Service.StandartPrecentForEmployee,
+            OrderServiceEmployeesCount = orderService.OrderServiceEmployees.Count,
+            OrderStartDateTime = orderService.Order.DateStart,
+            TotalPrice = orderService.PriceTotal,
+        };
+
+        orderService.EmployeeEarinig.Update(createEmployeeEarningDto);
+    }
+
 	private async Task SendServicePageAsync(long chatId, int orderId, int serviceIndex0, CancellationToken cancellationToken)
 	{
-		// Load order with services and cars
+		// Load order with services and employees
 		var order = await repositoryManager.OrderRepository
 			.FindByCondition(o => o.Id == orderId, false)
 			.Include(o => o.OrderServices).ThenInclude(os => os.Service)
-			.Include(o => o.OrderServices).ThenInclude(os => os.OrderServiceCars).ThenInclude(osc => osc.Car).ThenInclude(c => c.CarModel)
+			.Include(o => o.OrderServices).ThenInclude(os => os.OrderServiceEmployees).ThenInclude(ose => ose.Employee)
 			.SingleOrDefaultAsync(cancellationToken);
 
 		if (order == null)
@@ -201,19 +251,20 @@ public class ChangeOrderServiceCarsHandler(
 
 		var service = services[serviceIndex0];
 
-		// Get currently selected cars
-		var selectedCars = service.OrderServiceCars.Select(osc => osc.CarId).ToHashSet();
+		// Get currently selected employees
+		var selectedEmployees = service.OrderServiceEmployees
+			.Select(ose => ose.EmployeeId)
+			.ToHashSet();
 
-		// Load all cars to choose from
-		var allCars = await repositoryManager.CarRepository
-			.FindAll(false)
-			.Include(c => c.CarModel)
-			.OrderBy(c => c.CarModel.Name)
+		// Load all employees to choose from
+		var allEmployees = await repositoryManager.EmployeeRepository
+			.FindByCondition(e => e.RoleId == Constants.DriversRole, false)
+			.OrderBy(e => e.Name)
 			.ToListAsync(cancellationToken);
 
 		// Build message
 		var sb = new StringBuilder();
-		sb.AppendLine($"⚙️ Изменение машин");
+		sb.AppendLine($"⚙️ Изменение водителей");
 		sb.AppendLine($"🧑 Клиент: {order.Client}");
 		sb.AppendLine($"📍 Адрес: {order.AddressCity}, {order.AddressStreet} {order.AddressNumber}");
 		sb.AppendLine();
@@ -222,34 +273,34 @@ public class ChangeOrderServiceCarsHandler(
 		sb.AppendLine($"🧮 Итого: {service.PriceTotal:0.##}");
 		sb.AppendLine();
 
-		// Show selected cars
-		if (selectedCars.Count > 0)
+		// Show selected employees
+		if (selectedEmployees.Count > 0)
 		{
-			sb.AppendLine("🚗 Выбранные машины:");
-			foreach (var osc in service.OrderServiceCars)
+			sb.AppendLine("👷 Выбранные водители:");
+			foreach (var ose in service.OrderServiceEmployees.Where(ose => ose.EmployeeId != Constants.UnknowingEmployeeId))
 			{
-				sb.AppendLine($"  ✅ {osc.Car.CarModel.Name} ({osc.Car.Number})");
+				sb.AppendLine($"  ✅ {ose.Employee.Name}");
 			}
 		}
 		else
 		{
-			sb.AppendLine("🚗 Машины: не выбраны");
+			sb.AppendLine("👷 Водители: не выбраны");
 		}
 		sb.AppendLine();
 		sb.AppendLine("━━━━━━━━━━━━━━━━━━━━");
-		sb.AppendLine("Выберите машины:");
+		sb.AppendLine("Выберите водителей:");
 
 		var buttons = new List<Button>();
 
-		// Car selection buttons
-		foreach (var car in allCars)
+		// Employee selection buttons
+		foreach (var emp in allEmployees)
 		{
-			var isSelected = selectedCars.Contains(car.Id);
-			var text = (isSelected ? "✅ " : "🚗 ") + $"{car.CarModel.Name} ({car.Number})";
+			var isSelected = selectedEmployees.Contains(emp.Id);
+			var text = (isSelected ? "✅ " : "👤 ") + emp.Name;
 			buttons.Add(new Button
 			{
 				Text = text,
-				CallbackData = $"changeorderservicecar:{order.Id}:service:{service.Id}:toggle:car:{car.Id}:index:{serviceIndex0 + 1}"
+				CallbackData = $"changemployees:{order.Id}:service:{service.Id}:toggle:employee:{emp.Id}:index:{serviceIndex0 + 1}"
 			});
 		}
 
@@ -261,7 +312,7 @@ public class ChangeOrderServiceCarsHandler(
 				buttons.Add(new Button
 				{
 					Text = "⟨ Предыдущая услуга",
-					CallbackData = $"changeorderservicecar:{order.Id}:page:{serviceIndex0}"
+					CallbackData = $"changemployees:{order.Id}:page:{serviceIndex0}"
 				});
 			}
 
@@ -270,7 +321,7 @@ public class ChangeOrderServiceCarsHandler(
 				buttons.Add(new Button
 				{
 					Text = "Следующая услуга ⟩",
-					CallbackData = $"changeorderservicecar:{order.Id}:service:{service.Id}:confirm:index:{serviceIndex0 + 1}"
+					CallbackData = $"changemployees:{order.Id}:service:{service.Id}:confirm:index:{serviceIndex0 + 1}"
 				});
 			}
 			else
@@ -279,7 +330,7 @@ public class ChangeOrderServiceCarsHandler(
 				buttons.Add(new Button
 				{
 					Text = "✅ Завершить",
-					CallbackData = $"changeorderservicecar:{order.Id}:service:{service.Id}:confirm:index:{serviceIndex0 + 1}"
+					CallbackData = $"changemployees:{order.Id}:service:{service.Id}:confirm:index:{serviceIndex0 + 1}"
 				});
 			}
 		}
@@ -289,10 +340,11 @@ public class ChangeOrderServiceCarsHandler(
 			buttons.Add(new Button
 			{
 				Text = "✅ Завершить",
-				CallbackData = $"changeorderservicecar:{order.Id}:service:{service.Id}:confirm:index:{serviceIndex0 + 1}"
+				CallbackData = $"changemployees:{order.Id}:service:{service.Id}:confirm:index:{serviceIndex0 + 1}"
 			});
 		}
 
 		await telegramBotAnswerService.SendMessageAsync(chatId, sb.ToString(), buttons, cancellationToken);
 	}
 }
+

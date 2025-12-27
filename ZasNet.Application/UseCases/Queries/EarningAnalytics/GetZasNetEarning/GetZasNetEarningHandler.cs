@@ -19,6 +19,7 @@ public class GetZasNetEarningHandler(IRepositoryManager repositoryManager)
         // Получаем все заявки за период
         var orders = await repositoryManager.OrderRepository
             .FindAll(false)
+            .Include(c=>c.OrderServices)
             .Where(o => o.DateStart >= request.DateFrom
                      && o.DateStart <= request.DateTo)
             .ToListAsync(cancellationToken);
@@ -37,20 +38,39 @@ public class GetZasNetEarningHandler(IRepositoryManager repositoryManager)
     /// Группировка по дням
     /// </summary>
     private List<ZasNetEarningByPeriodDto> GetDailyEarnings(
-        List<ZasNet.Domain.Entities.Order> orders,
+        List<Domain.Entities.Order> orders,
         DateTime dateFrom,
         DateTime dateTo)
     {
-        var earnings = orders
-            .GroupBy(o => o.DateStart.Date)
-            .Select(g => new ZasNetEarningByPeriodDto
-            {
-                Period = g.Key,
-                GroupPeriod = GroupPeriod.Day,
-                TotalEarning = g.Sum(o => o.OrderPriceAmount)
-            })
-            .OrderBy(r => r.Period)
-            .ToList();
+        List<ZasNetEarningByPeriodDto> earnings = orders
+                .GroupBy(o => o.DateStart.Date)
+                .Select(g => new ZasNetEarningByPeriodDto
+                {
+                    Period = g.Key,
+                    GroupPeriod = GroupPeriod.Day,
+                    CommonEarning = g.SelectMany(c => c.OrderServices).Where(c => c.IsAlmazService != true).Sum(c => c.PriceTotal),
+                    CommonEarningWithVat = g.SelectMany(c => c.OrderServices).Where(c => c.IsAlmazService != true).Sum(c =>
+                    {
+                        if (c.Order.PaymentType == PaymentType.CashWithVat)
+                        {
+                            return c.PriceTotal * 0.85M;
+                        }
+
+                        return c.PriceTotal;
+                    }),
+                    AlmazEarning = g.SelectMany(c => c.OrderServices).Where(c => c.IsAlmazService == true).Sum(c => c.PriceTotal),
+                    AlmazEarningWithVat = g.SelectMany(c => c.OrderServices).Where(c => c.IsAlmazService == true).Sum(c =>
+                    {
+                        if (c.Order.PaymentType == PaymentType.CashWithVat)
+                        {
+                            return c.PriceTotal * 0.85M;
+                        }
+
+                        return c.PriceTotal;
+                    }),
+                })
+                .OrderBy(r => r.Period)
+                .ToList();
 
         // Заполняем дни без заработка нулями для полного диапазона
         return FillMissingPeriods(earnings, GroupPeriod.Day, dateFrom, dateTo);
@@ -75,7 +95,26 @@ public class GetZasNetEarningHandler(IRepositoryManager repositoryManager)
             {
                 Period = g.Key.FirstDayOfMonth,
                 GroupPeriod = GroupPeriod.Month,
-                TotalEarning = g.Sum(o => o.OrderPriceAmount)
+                CommonEarning = g.SelectMany(c => c.OrderServices).Where(c => c.IsAlmazService != true).Sum(c => c.PriceTotal),
+                CommonEarningWithVat = g.SelectMany(c => c.OrderServices).Where(c => c.IsAlmazService != true).Sum(c =>
+                {
+                    if (c.Order.PaymentType == PaymentType.CashWithVat)
+                    {
+                        return c.PriceTotal * 0.85M;
+                    }
+
+                    return c.PriceTotal;
+                }),
+                AlmazEarning = g.SelectMany(c => c.OrderServices).Where(c => c.IsAlmazService == true).Sum(c => c.PriceTotal),
+                AlmazEarningWithVat = g.SelectMany(c => c.OrderServices).Where(c => c.IsAlmazService == true).Sum(c =>
+                {
+                    if (c.Order.PaymentType == PaymentType.CashWithVat)
+                    {
+                        return c.PriceTotal * 0.85M;
+                    }
+
+                    return c.PriceTotal;
+                }),
             })
             .OrderBy(r => r.Period)
             .ToList();
@@ -104,7 +143,26 @@ public class GetZasNetEarningHandler(IRepositoryManager repositoryManager)
             {
                 Period = g.Key.FirstDayOfYear,
                 GroupPeriod = GroupPeriod.Year,
-                TotalEarning = g.Sum(o => o.OrderPriceAmount)
+                CommonEarning = g.SelectMany(c => c.OrderServices).Where(c => c.IsAlmazService != true).Sum(c => c.PriceTotal),
+                CommonEarningWithVat = g.SelectMany(c => c.OrderServices).Where(c => c.IsAlmazService != true).Sum(c =>
+                {
+                    if (c.Order.PaymentType == PaymentType.CashWithVat)
+                    {
+                        return c.PriceTotal * 0.85M;
+                    }
+
+                    return c.PriceTotal;
+                }),
+                AlmazEarning = g.SelectMany(c => c.OrderServices).Where(c => c.IsAlmazService == true).Sum(c => c.PriceTotal),
+                AlmazEarningWithVat = g.SelectMany(c => c.OrderServices).Where(c => c.IsAlmazService == true).Sum(c =>
+                {
+                    if (c.Order.PaymentType == PaymentType.CashWithVat)
+                    {
+                        return c.PriceTotal * 0.85M;
+                    }
+
+                    return c.PriceTotal;
+                }),
             })
             .OrderBy(r => r.Period)
             .ToList();
@@ -125,7 +183,10 @@ public class GetZasNetEarningHandler(IRepositoryManager repositoryManager)
         DateTime dateTo)
     {
         var result = new List<ZasNetEarningByPeriodDto>();
-        var earningsDict = earnings.ToDictionary(e => e.Period, e => e.TotalEarning);
+        var earningsCommonDict = earnings.ToDictionary(e => e.Period, e => e.CommonEarning);
+        var earningsAlmazDict = earnings.ToDictionary(e => e.Period, e => e.AlmazEarning);
+        var earningsCommonVatDict = earnings.ToDictionary(e => e.Period, e => e.CommonEarningWithVat);
+        var earningsAlmazVatDict = earnings.ToDictionary(e => e.Period, e => e.AlmazEarningWithVat);
 
         var currentPeriod = dateFrom.Date;
 
@@ -156,7 +217,10 @@ public class GetZasNetEarningHandler(IRepositoryManager repositoryManager)
             {
                 Period = currentPeriod,
                 GroupPeriod = groupPeriod,
-                TotalEarning = earningsDict.GetValueOrDefault(currentPeriod, 0)
+                CommonEarning = earningsCommonDict.GetValueOrDefault(currentPeriod, 0),
+                AlmazEarning = earningsAlmazDict.GetValueOrDefault(currentPeriod, 0),
+                CommonEarningWithVat = earningsCommonVatDict.GetValueOrDefault(currentPeriod, 0),
+                AlmazEarningWithVat = earningsAlmazVatDict.GetValueOrDefault(currentPeriod, 0),
             });
 
             currentPeriod = groupPeriod switch

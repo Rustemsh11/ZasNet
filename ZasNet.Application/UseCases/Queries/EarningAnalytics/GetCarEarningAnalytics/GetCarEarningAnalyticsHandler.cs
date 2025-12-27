@@ -37,8 +37,11 @@ public class GetCarEarningAnalyticsHandler(IRepositoryManager repositoryManager)
 
         var carData = await query.ToListAsync(cancellationToken);
 
-        // Группируем по машинам и считаем заработки водителей
-        // Для каждой машины суммируем заработки всех водителей, работавших на услугах с этой машиной
+        // Создаем словарь с количеством машин для каждой услуги
+        var carsPerService = carData
+            .GroupBy(osc => osc.OrderServiceId)
+            .ToDictionary(g => g.Key, g => g.Count());
+
         var analytics = carData
             .GroupBy(osc => new { osc.CarId, osc.Car.Number, CarModelName = osc.Car.CarModel != null ? osc.Car.CarModel.Name : null })
             .Select(g =>
@@ -53,7 +56,9 @@ public class GetCarEarningAnalyticsHandler(IRepositoryManager repositoryManager)
                         continue;
 
                     processedServices.Add(osc.OrderServiceId);
-                    totalEarnings += osc.OrderService.PriceTotal;
+                    // Делим PriceTotal на количество машин, выполняющих эту услугу
+                    var carsCount = carsPerService[osc.OrderServiceId];
+                    totalEarnings += osc.OrderService.PriceTotal / carsCount;
                 }
 
                 return new CarEarningAnalyticsDto

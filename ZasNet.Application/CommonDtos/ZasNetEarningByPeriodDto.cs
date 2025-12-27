@@ -20,6 +20,22 @@ public class ZasNetEarningByPeriodDto
     /// <summary>
     /// Общая прибыль за период (OrderPriceAmount)
     /// </summary>
-    public decimal TotalEarning { get; set; }
+    public decimal CommonEarning { get; set; }
+    
+    /// <summary>
+    /// Прибыль Алмаза за период (OrderPriceAmount)
+    /// </summary>
+    public decimal AlmazEarning { get; set; }
+    
+    /// <summary>
+    /// Общая прибыль c учетом налога период (OrderPriceAmount)
+    /// </summary>
+    public decimal CommonEarningWithVat { get; set; }
+    
+    /// <summary>
+    /// Прибыль Алмаза c учетом налога за период (OrderPriceAmount)
+    /// </summary>
+    public decimal AlmazEarningWithVat { get; set; }
+
 }
 

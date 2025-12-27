@@ -22,6 +22,14 @@ public class EmployeeEarinig : BaseItem
             EmployeeEarning = GetEarning(orderService, percent),
         };
     }
+    
+    public void Update(CreateEmployeeEarningDto orderService)
+    {
+        var (percent, description) = GetPrecent(orderService);
+        this.ServiceEmployeePrecent = percent;
+        this.PrecentEmployeeDescription = description;
+        this.EmployeeEarning = GetEarning(orderService, percent);
+    }
 
     public class CreateEmployeeEarningDto
     {

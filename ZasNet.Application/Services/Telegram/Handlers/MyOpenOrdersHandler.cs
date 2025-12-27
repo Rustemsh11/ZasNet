@@ -69,7 +69,7 @@ public class MyOpenOrdersHandler(IRepositoryManager repositoryManager,
         {
 			var orders = await repositoryManager.OrderRepository
 				.FindByCondition(o =>
-					o.Status != OrderStatus.Closed
+					(o.Status == OrderStatus.Created || o.Status == OrderStatus.ApprovedWithEmployers)
 					&& o.OrderServices.Any(os => os.OrderServiceEmployees.Any(ose => ose.EmployeeId == employee.Id)),
 					false)
 				.Include(o => o.OrderServices).ThenInclude(os => os.Service)
@@ -165,7 +165,8 @@ public class MyOpenOrdersHandler(IRepositoryManager repositoryManager,
                 if (currentUserCanApproveCar)
                 {
                     buttons.Add(new Button { Text = $"✅ машины на выезд", CallbackData = $"approveorderservicecar:{order.Id}" });
-                    buttons.Add(new Button { Text = $"🔄 машины на выезд", CallbackData = $"changeorderservicecar:{order.Id}" });
+                    buttons.Add(new Button { Text = $"🔄 изменить водителей", CallbackData = $"changemployees:{order.Id}" });
+                    buttons.Add(new Button { Text = $"🔄 изменить машины", CallbackData = $"changeorderservicecar:{order.Id}" });
                 }
 
 
