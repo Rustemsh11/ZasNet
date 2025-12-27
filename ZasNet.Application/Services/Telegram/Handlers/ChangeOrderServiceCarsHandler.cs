@@ -33,9 +33,11 @@ public class ChangeOrderServiceCarsHandler(
 
 		// Supported callbacks:
 		// changeorderservicecar:{orderId} - начальная страница
+		// changeorderservicecar:{orderId}:new:{orderServiceId} - начальная страница с новой услугой первой
 		// changeorderservicecar:{orderId}:page:{serviceIndex1based} - навигация по услугам
 		// changeorderservicecar:{orderId}:service:{orderServiceId}:toggle:car:{carId}:index:{serviceIndex1based} - toggle машины
 		// changeorderservicecar:{orderId}:service:{orderServiceId}:confirm:index:{serviceIndex1based} - подтверждение выбора
+		// changeorderservicecar:{orderId}:service:{orderServiceId}:confirm:index:{serviceIndex1based}:newservice - подтверждение выбора для новой услуги
 
 		if (parts.Length >= 2 && int.TryParse(parts[1], out var orderId))
 		{
@@ -61,7 +63,9 @@ public class ChangeOrderServiceCarsHandler(
 				if (orderServiceId > 0 && carId > 0)
 				{
 					await ToggleCarAsync(chatId, orderId, orderServiceId, carId, cancellationToken);
-					await SendServicePageAsync(chatId, orderId, targetServiceIndex0, cancellationToken);
+					// Preserve newServiceId if we're at index 0 (the new service position)
+					int? newServiceIdToPass = targetServiceIndex0 == 0 ? orderServiceId : null;
+					await SendServicePageAsync(chatId, orderId, targetServiceIndex0, cancellationToken, newServiceIdToPass);
 					return new HandlerResult { Success = true };
 				}
 			}
@@ -72,6 +76,7 @@ public class ChangeOrderServiceCarsHandler(
 				int orderServiceId = 0;
 				int serviceIdx = Array.FindIndex(parts, p => p.Equals("service", StringComparison.OrdinalIgnoreCase));
 				int indexIdx = Array.FindIndex(parts, p => p.Equals("index", StringComparison.OrdinalIgnoreCase));
+				bool isNewService = parts.Contains("newservice", StringComparer.OrdinalIgnoreCase);
 
 				if (serviceIdx >= 0 && serviceIdx + 1 < parts.Length) int.TryParse(parts[serviceIdx + 1], out orderServiceId);
 
@@ -79,6 +84,13 @@ public class ChangeOrderServiceCarsHandler(
 				if (indexIdx >= 0 && indexIdx + 1 < parts.Length && int.TryParse(parts[indexIdx + 1], out var idxParsed) && idxParsed > 0)
 				{
 					targetServiceIndex0 = idxParsed - 1;
+				}
+
+				// If this is a new service, just finish and return to orders list
+				if (isNewService)
+				{
+					await telegramBotAnswerService.SendMessageAsync(chatId, "✅ Услуга успешно добавлена! Обновите список заявок.", cancellationToken);
+					return new HandlerResult { Success = true };
 				}
 
 				// Load order to check if there are more services
@@ -107,13 +119,22 @@ public class ChangeOrderServiceCarsHandler(
 
 			// Page navigation / initial entry
 			int currentIndex0 = 0;
+			int? newServiceId = null;
+
+			// Check if this is a new service
+			var newIdx = Array.FindIndex(parts, p => p.Equals("new", StringComparison.OrdinalIgnoreCase));
+			if (newIdx >= 0 && newIdx + 1 < parts.Length && int.TryParse(parts[newIdx + 1], out var newSvcId))
+			{
+				newServiceId = newSvcId;
+			}
+
 			var pageIdx = Array.FindIndex(parts, p => p.Equals("page", StringComparison.OrdinalIgnoreCase));
 			if (pageIdx >= 0 && pageIdx + 1 < parts.Length && int.TryParse(parts[pageIdx + 1], out var idx1based) && idx1based > 0)
 			{
 				currentIndex0 = idx1based - 1;
 			}
 
-			await SendServicePageAsync(chatId, orderId, currentIndex0, cancellationToken);
+			await SendServicePageAsync(chatId, orderId, currentIndex0, cancellationToken, newServiceId);
 			return new HandlerResult { Success = true };
 		}
 
@@ -174,7 +195,7 @@ public class ChangeOrderServiceCarsHandler(
 		}
 	}
 
-	private async Task SendServicePageAsync(long chatId, int orderId, int serviceIndex0, CancellationToken cancellationToken)
+	private async Task SendServicePageAsync(long chatId, int orderId, int serviceIndex0, CancellationToken cancellationToken, int? newServiceId = null)
 	{
 		// Load order with services and cars
 		var order = await repositoryManager.OrderRepository
@@ -190,6 +211,18 @@ public class ChangeOrderServiceCarsHandler(
 		}
 
 		var services = order.OrderServices.OrderBy(os => os.Id).ToList();
+
+		// If newServiceId is provided, move it to the front
+		if (newServiceId.HasValue)
+		{
+			var newService = services.FirstOrDefault(s => s.Id == newServiceId.Value);
+			if (newService != null)
+			{
+				services.Remove(newService);
+				services.Insert(0, newService);
+				serviceIndex0 = 0; // Show the new service first
+			}
+		}
 		if (services.Count == 0)
 		{
 			await telegramBotAnswerService.SendMessageAsync(chatId, "В заявке нет услуг.", cancellationToken);
@@ -253,6 +286,9 @@ public class ChangeOrderServiceCarsHandler(
 			});
 		}
 
+		// Determine if this is a new service (it's at index 0 and has newServiceId)
+		bool isNewService = newServiceId.HasValue && service.Id == newServiceId.Value;
+
 		// Navigation and confirmation buttons
 		if (services.Count > 1)
 		{
@@ -267,29 +303,41 @@ public class ChangeOrderServiceCarsHandler(
 
 			if (serviceIndex0 < services.Count - 1)
 			{
+				var confirmCallback = isNewService 
+					? $"changeorderservicecar:{order.Id}:service:{service.Id}:confirm:index:{serviceIndex0 + 1}:newservice"
+					: $"changeorderservicecar:{order.Id}:service:{service.Id}:confirm:index:{serviceIndex0 + 1}";
+				
 				buttons.Add(new Button
 				{
-					Text = "Следующая услуга ⟩",
-					CallbackData = $"changeorderservicecar:{order.Id}:service:{service.Id}:confirm:index:{serviceIndex0 + 1}"
+					Text = isNewService ? "Завершить ⟩" : "Следующая услуга ⟩",
+					CallbackData = confirmCallback
 				});
 			}
 			else
 			{
 				// Last service - just confirm
+				var confirmCallback = isNewService 
+					? $"changeorderservicecar:{order.Id}:service:{service.Id}:confirm:index:{serviceIndex0 + 1}:newservice"
+					: $"changeorderservicecar:{order.Id}:service:{service.Id}:confirm:index:{serviceIndex0 + 1}";
+				
 				buttons.Add(new Button
 				{
 					Text = "✅ Завершить",
-					CallbackData = $"changeorderservicecar:{order.Id}:service:{service.Id}:confirm:index:{serviceIndex0 + 1}"
+					CallbackData = confirmCallback
 				});
 			}
 		}
 		else
 		{
 			// Only one service
+			var confirmCallback = isNewService 
+				? $"changeorderservicecar:{order.Id}:service:{service.Id}:confirm:index:{serviceIndex0 + 1}:newservice"
+				: $"changeorderservicecar:{order.Id}:service:{service.Id}:confirm:index:{serviceIndex0 + 1}";
+			
 			buttons.Add(new Button
 			{
 				Text = "✅ Завершить",
-				CallbackData = $"changeorderservicecar:{order.Id}:service:{service.Id}:confirm:index:{serviceIndex0 + 1}"
+				CallbackData = confirmCallback
 			});
 		}
 

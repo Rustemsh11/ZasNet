@@ -86,6 +86,8 @@ builder.Services.AddScoped<ITelegramMessageHandler, ChangeOrderServiceCarsHandle
 builder.Services.AddScoped<ITelegramMessageHandler, ChangeOrderServiceEmployeesHandler>();
 builder.Services.AddScoped<ITelegramMessageHandler, ProcessingOrderEditHandler>();
 builder.Services.AddScoped<ITelegramMessageHandler, GetNeedInvoiceOrdersHandler>();
+builder.Services.AddScoped<ITelegramMessageHandler, AddOrderServiceHandler>();
+builder.Services.AddScoped<ITelegramMessageHandler, DeleteOrderServiceHandler>();
 
 builder.Services.AddScoped<TelegramMessageProcessor>();
 

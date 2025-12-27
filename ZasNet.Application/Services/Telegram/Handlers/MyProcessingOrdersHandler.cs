@@ -159,6 +159,8 @@ public class MyProcessingOrdersHandler(
 
 				// Common actions for processing order
 				buttons.Add(new Button { Text = "✏️ Изменить услуги", CallbackData = $"processing_orders:edit:order:{order.Id}" });
+				buttons.Add(new Button { Text = "➕ Добавить услугу", CallbackData = $"addorderservice:{order.Id}" });
+				buttons.Add(new Button { Text = "➖ Удалить услугу", CallbackData = $"deleteorderservice:{order.Id}" });
 				buttons.Add(new Button { Text = "📸 Фото отчёт", CallbackData = $"processing_orders:photos:start:{order.Id}" });
 				buttons.Add(new Button { Text = "✅ Подтвердить все и завершить заявку", CallbackData = $"processing_orders:finish:{order.Id}" });
 

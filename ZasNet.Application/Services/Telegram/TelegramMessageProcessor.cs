@@ -32,7 +32,7 @@ public class TelegramMessageProcessor
                 };
             }
 
-            return await handler.HandleAsync(update, cancellationToken);
+             return await handler.HandleAsync(update, cancellationToken);
         }
         catch (Exception ex)
         {
