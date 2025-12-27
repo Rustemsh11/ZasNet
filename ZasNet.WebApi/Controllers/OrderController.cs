@@ -7,8 +7,10 @@ using ZasNet.Application.UseCases.Commands.Orders.ChangeOrderStatus;
 using ZasNet.Application.UseCases.Commands.Orders.ChangeOrderStatusToWaitingInvoice;
 using ZasNet.Application.UseCases.Commands.Orders.CreateOrder;
 using ZasNet.Application.UseCases.Commands.Orders.DeleteOrder;
+using ZasNet.Application.UseCases.Commands.Orders.ResetLocks;
 using ZasNet.Application.UseCases.Commands.Orders.SaveOrder;
 using ZasNet.Application.UseCases.Queries.Orders.GetCreateOrderParameters;
+using ZasNet.Application.UseCases.Queries.Orders.GetLockedOrders;
 using ZasNet.Application.UseCases.Queries.Orders.GetOrder;
 using ZasNet.Application.UseCases.Queries.Orders.GetOrders;
 using ZasNet.Application.UseCases.Queries.Orders.GetOrdersByFilter;
@@ -70,6 +72,18 @@ public class OrderController(IMediator mediator): ControllerBase
     
     [HttpDelete]
     public async Task DeleteOrder([FromBody] DeleteOrderCommand command, CancellationToken token)
+    {
+        await mediator.Send(command, token);
+    }
+    
+    [HttpGet]
+    public async Task<List<GetLockedOrdersResponse>> GetLockedOrders([FromQuery] GetLockedOrdersRequest command, CancellationToken token)
+    {
+        return await mediator.Send(command, token);
+    }
+    
+    [HttpPost]
+    public async Task ResetLockedOrder([FromBody] ResetLocksCommand command, CancellationToken token)
     {
         await mediator.Send(command, token);
     }

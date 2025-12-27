@@ -74,14 +74,14 @@ public class OrderAutoProcessingService : BackgroundService
 
 		foreach (var order in dueOrders)
 		{
-			if(order.Status == OrderStatus.ApprovedWithEmployers)
-			{
-				var buttons = new List<Button>
-				{
-					new Button { Text = "Открыть заявку", Url = $"https://localhost:7111/order/{order.Id}" }
-				};
-				//await this.telegramBotAnswer.SendMessageAsync(order.CreatedEmployee.ChatId.Value, $"Началась работа по заявке [{order.Client}]. Необходимо подвтвердить выездны", buttons);
-			}
+			//if(order.Status == OrderStatus.ApprovedWithEmployers)
+			//{
+			//	var buttons = new List<Button>
+			//	{
+			//		new Button { Text = "Открыть заявку", Url = $"https://localhost:7111/order/{order.Id}" }
+			//	};
+			//	await this.telegramBotAnswer.SendMessageAsync(order.CreatedEmployee.ChatId.Value, $"Началась работа по заявке [{order.Client}]. Необходимо подвтвердить выездны", buttons);
+			//}
 			order.UpdateStatus(OrderStatus.Processing);
 			// tracked entities will be saved; Update is not required but safe if the entity wasn't tracked for any reason
 			repositoryManager.OrderRepository.Update(order);

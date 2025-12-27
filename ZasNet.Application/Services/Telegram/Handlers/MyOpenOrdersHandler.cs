@@ -165,8 +165,8 @@ public class MyOpenOrdersHandler(IRepositoryManager repositoryManager,
                 if (currentUserCanApproveCar)
                 {
                     buttons.Add(new Button { Text = $"✅ машины на выезд", CallbackData = $"approveorderservicecar:{order.Id}" });
-                    buttons.Add(new Button { Text = $"🔄 изменить водителей", CallbackData = $"changemployees:{order.Id}" });
-                    buttons.Add(new Button { Text = $"🔄 изменить машины", CallbackData = $"changeorderservicecar:{order.Id}" });
+                    buttons.Add(new Button { Text = $"🔄 водителей", CallbackData = $"changemployees:{order.Id}" });
+                    buttons.Add(new Button { Text = $"🔄 машины", CallbackData = $"changeorderservicecar:{order.Id}" });
                 }
 
 

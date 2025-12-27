@@ -158,17 +158,19 @@ public class MyProcessingOrdersHandler(
 				}
 
 				// Common actions for processing order
-				buttons.Add(new Button { Text = "✏️ Изменить услуги", CallbackData = $"processing_orders:edit:order:{order.Id}" });
-				buttons.Add(new Button { Text = "➕ Добавить услугу", CallbackData = $"addorderservice:{order.Id}" });
-				buttons.Add(new Button { Text = "➖ Удалить услугу", CallbackData = $"deleteorderservice:{order.Id}" });
+				buttons.Add(new Button { Text = "✏️ услуги", CallbackData = $"processing_orders:edit:order:{order.Id}" });
+				buttons.Add(new Button { Text = "➕ услугу", CallbackData = $"addorderservice:{order.Id}" });
+				buttons.Add(new Button { Text = "➖ услугу", CallbackData = $"deleteorderservice:{order.Id}" });
 				buttons.Add(new Button { Text = "📸 Фото отчёт", CallbackData = $"processing_orders:photos:start:{order.Id}" });
-				buttons.Add(new Button { Text = "✅ Подтвердить все и завершить заявку", CallbackData = $"processing_orders:finish:{order.Id}" });
+				buttons.Add(new Button { Text = "💬 Комментарии", CallbackData = $"processing_orders:comment:{order.Id}" });
+				buttons.Add(new Button { Text = "✅ Выполнено", CallbackData = $"processing_orders:finish:{order.Id}" });
 
 				if (currentUserCanApproveCar)
 				{
-					buttons.Add(new Button { Text = $"✅ машины на выезд", CallbackData = $"approveorderservicecar:{order.Id}" });
-					buttons.Add(new Button { Text = $"🔄 изменить водителей", CallbackData = $"changemployees:{order.Id}" });
-					buttons.Add(new Button { Text = $"🔄 изменить машины", CallbackData = $"changeorderservicecar:{order.Id}" });
+					buttons.Add(new Button { Text = $"✅ машины", CallbackData = $"approveorderservicecar:{order.Id}" });
+					buttons.Add(new Button { Text = $"🔄 водителей", CallbackData = $"changemployees:{order.Id}" });
+					buttons.Add(new Button { Text = $"🔄 машины", CallbackData = $"changeorderservicecar:{order.Id}" });
+					buttons.Add(new Button { Text = "🔄 тип оплаты", CallbackData = $"processing_orders:payment_type:{order.Id}" });
 				}
 
 				var sb = new StringBuilder();

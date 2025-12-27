@@ -98,7 +98,7 @@ public class FreeOrdersHandler(IRepositoryManager repositoryManager, ITelegramBo
 					if (serviceEmployees.Count == 0)
 					{
 						serviesText.AppendLine("	👷 Сотрудники: пока не назначены");
-						buttons.Add(new Button { Text = $"Взять услугу {i + 1}", CallbackData = $"order:{service.OrderId}:orderservice:{service.Id}" });
+						buttons.Add(new Button { Text = $"Взять {i + 1}", CallbackData = $"order:{service.OrderId}:orderservice:{service.Id}" });
 					}
 					else
 					{
@@ -108,7 +108,7 @@ public class FreeOrdersHandler(IRepositoryManager repositoryManager, ITelegramBo
 							if (serviceEmployees[k].Employee.Id == Constants.UnknowingEmployeeId)
 							{
 								serviesText.AppendLine($"		🆓 Свободно ({k + 1})");
-								buttons.Add(new Button { Text = $"Взять услугу {i + 1}", CallbackData = $"order:{service.OrderId}:orderservice:{service.Id}" });
+								buttons.Add(new Button { Text = $"Взять {i + 1}", CallbackData = $"order:{service.OrderId}:orderservice:{service.Id}" });
 							}
 							else
 							{

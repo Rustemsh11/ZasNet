@@ -4,6 +4,7 @@ using System.Text;
 using ZasNet.Application.Repository;
 using ZasNet.Domain.Entities;
 using ZasNet.Domain.Enums;
+using ZasNet.Domain.Helpers;
 using ZasNet.Domain.Interfaces;
 using ZasNet.Domain.Telegram;
 using static ZasNet.Domain.Entities.EmployeeEarinig;
@@ -36,13 +37,16 @@ public class ProcessingOrderEditHandler(
 			if (data.StartsWith($"{CallbackRoot}:photos:done:", StringComparison.OrdinalIgnoreCase)) return true;
 			if (data.StartsWith($"{CallbackRoot}:edit_service:", StringComparison.OrdinalIgnoreCase)) return true;
 			if (data.StartsWith($"{CallbackRoot}:finish:", StringComparison.OrdinalIgnoreCase)) return true;
+			if (data.StartsWith($"{CallbackRoot}:comment:", StringComparison.OrdinalIgnoreCase)) return true;
+			if (data.StartsWith($"{CallbackRoot}:payment_type:", StringComparison.OrdinalIgnoreCase)) return true;
+			if (data.StartsWith($"{CallbackRoot}:set_payment_type:", StringComparison.OrdinalIgnoreCase)) return true;
 		}
 
 		var chatId = telegramUpdate?.Message?.From?.ChatId ?? 0;
 		if (chatId != 0 && userSessionCache.TryGet(chatId, out var session))
 		{
 			// Accept messages with text when awaiting input and photos when uploading
-			if (telegramUpdate?.Message?.Text is not null && (session.Step == EditStep.AwaitingPrice || session.Step == EditStep.AwaitingVolume))
+			if (telegramUpdate?.Message?.Text is not null && (session.Step == EditStep.AwaitingPrice || session.Step == EditStep.AwaitingVolume || session.Step == EditStep.AwaitingComment))
 			{
 				return true;
 			}
@@ -89,6 +93,21 @@ public class ProcessingOrderEditHandler(
 			if (data.StartsWith($"{CallbackRoot}:finish:", StringComparison.OrdinalIgnoreCase))
 			{
 				return await HandleFinishOrderAsync(telegramUpdate, cancellationToken);
+			}
+
+			if (data.StartsWith($"{CallbackRoot}:comment:", StringComparison.OrdinalIgnoreCase))
+			{
+				return await HandleCommentCallbackAsync(telegramUpdate, cancellationToken);
+			}
+
+			if (data.StartsWith($"{CallbackRoot}:payment_type:", StringComparison.OrdinalIgnoreCase))
+			{
+				return await HandlePaymentTypeCallbackAsync(telegramUpdate, cancellationToken);
+			}
+
+			if (data.StartsWith($"{CallbackRoot}:set_payment_type:", StringComparison.OrdinalIgnoreCase))
+			{
+				return await HandleSetPaymentTypeAsync(telegramUpdate, cancellationToken);
 			}
 		}
 
@@ -161,12 +180,8 @@ public class ProcessingOrderEditHandler(
 		if (parts.Length >= 4 && int.TryParse(parts[3], out var orderId))
 		{
             var chatId = update.CallbackQuery!.From!.ChatId;
-            if (!(await CheckAndSetLock(orderId, chatId, cancellationToken)))
-			{
-                return new HandlerResult { Success = true };
-            }
-
-            if (parts.Length == 4)
+            
+			if (parts.Length == 4)
 			{
 				// show service list
 				return await ShowServicesListAsync(update, orderId, cancellationToken);
@@ -267,11 +282,7 @@ public class ProcessingOrderEditHandler(
 		if (parts.Length == 5 && int.TryParse(parts[3], out var orderId) && int.TryParse(parts[4], out var orderServiceId))
 		{
             var chatId = update.CallbackQuery!.From!.ChatId;
-            if (!(await CheckAndSetLock(orderId, chatId, cancellationToken)))
-            {
-                return new HandlerResult { Success = true };
-            }
-            var field = parts[2];
+			var field = parts[2];
 			if (field == "price")
 			{
 				userSessionCache.Set(new EditOrderSession
@@ -334,18 +345,30 @@ public class ProcessingOrderEditHandler(
 			{
 				await telegramBotAnswerService.SendMessageAsync(chatId, "Услуга не найдена.", cancellationToken);
 				return new HandlerResult { Success = true };
+            }
+
+            if (!(await CheckAndSetLock(session.OrderId, chatId, cancellationToken)))
+            {
+                return new HandlerResult { Success = true };
+            }
+
+			try
+			{
+				os.Price = newPrice;
+				os.PriceTotal = os.Price * (decimal)os.TotalVolume;
+
+				// Обновление EmployeeEarning
+				await UpdateEmployeeEarningForOrderService(os, cancellationToken);
+
+				// Обновление DispetcherEarning
+				await UpdateDispetcherEarningForOrder(os.Order, cancellationToken);
+
+				await repositoryManager.SaveAsync(cancellationToken);
 			}
-
-			os.Price = newPrice;
-			os.PriceTotal = os.Price * (decimal)os.TotalVolume;
-
-			// Обновление EmployeeEarning
-			await UpdateEmployeeEarningForOrderService(os, cancellationToken);
-
-			// Обновление DispetcherEarning
-			await UpdateDispetcherEarningForOrder(os.Order, cancellationToken);
-
-			await repositoryManager.SaveAsync(cancellationToken);
+			finally
+			{
+				await repositoryManager.OrderRepository.UnLockItem(session.OrderId);
+			}
 
 			freeOrdersCache.Invalidate(chatId);
 			userSessionCache.Invalidate(chatId);
@@ -380,21 +403,85 @@ public class ProcessingOrderEditHandler(
 				return new HandlerResult { Success = true };
 			}
 
-			os.TotalVolume = newVol;
-			os.PriceTotal = os.Price * (decimal)os.TotalVolume;
+            if (!(await CheckAndSetLock(session.OrderId, chatId, cancellationToken)))
+            {
+                return new HandlerResult { Success = true };
+            }
 
-			// Обновление EmployeeEarning
-			await UpdateEmployeeEarningForOrderService(os, cancellationToken);
+			try
+			{
+				os.TotalVolume = newVol;
+				os.PriceTotal = os.Price * (decimal)os.TotalVolume;
 
-			// Обновление DispetcherEarning
-			await UpdateDispetcherEarningForOrder(os.Order, cancellationToken);
+				// Обновление EmployeeEarning
+				await UpdateEmployeeEarningForOrderService(os, cancellationToken);
 
-			await repositoryManager.SaveAsync(cancellationToken);
+				// Обновление DispetcherEarning
+				await UpdateDispetcherEarningForOrder(os.Order, cancellationToken);
+
+				await repositoryManager.SaveAsync(cancellationToken);
+			}
+			finally
+			{
+                await repositoryManager.OrderRepository.UnLockItem(session.OrderId);
+            }
 
 			freeOrdersCache.Invalidate(chatId);
 			userSessionCache.Invalidate(chatId);
 
 			await telegramBotAnswerService.SendMessageAsync(chatId, $"Объем обновлен: {newVol}", cancellationToken);
+			return new HandlerResult { Success = true };
+		}
+
+		if (session.Step == EditStep.AwaitingComment)
+		{
+			var commentText = update.Message!.Text ?? string.Empty;
+			if (string.IsNullOrWhiteSpace(commentText))
+			{
+				await telegramBotAnswerService.SendMessageAsync(chatId, "Комментарий не может быть пустым. Введите текст комментария:", cancellationToken);
+				return new HandlerResult { Success = true };
+			}
+
+			var order = await repositoryManager.OrderRepository
+				.FindByCondition(o => o.Id == session.OrderId, true)
+				.SingleOrDefaultAsync(cancellationToken);
+
+			if (order == null)
+			{
+				await telegramBotAnswerService.SendMessageAsync(chatId, "Заявка не найдена.", cancellationToken);
+				userSessionCache.Invalidate(chatId);
+				return new HandlerResult { Success = true };
+			}
+
+            if (!(await CheckAndSetLock(session.OrderId, chatId, cancellationToken)))
+            {
+                return new HandlerResult { Success = true };
+            }
+
+			try
+			{
+				var newComment = $"{commentText}";
+			
+				if (string.IsNullOrWhiteSpace(order.Description))
+				{
+					order.Description = commentText;
+				}
+				else
+				{
+					order.Description += "/n {newComment}";
+				}
+
+				await repositoryManager.SaveAsync(cancellationToken);
+			}
+			finally
+			{
+				await repositoryManager.OrderRepository.UnLockItem(session.OrderId);
+			}
+
+			freeOrdersCache.Invalidate(chatId);
+			userSessionCache.Invalidate(chatId);
+
+			await telegramBotAnswerService.SendMessageAsync(chatId, "Комментарий добавлен к заявке.", cancellationToken);
 			return new HandlerResult { Success = true };
 		}
 
@@ -408,10 +495,7 @@ public class ProcessingOrderEditHandler(
 		if (parts.Length == 4 && int.TryParse(parts[3], out var orderId))
 		{
 			var chatId = update.CallbackQuery!.From!.ChatId;
-            if (!(await CheckAndSetLock(orderId, chatId, cancellationToken)))
-            {
-                return new HandlerResult { Success = true };
-            }
+            
             userSessionCache.Set(new EditOrderSession
 			{
 				ChatId = chatId,
@@ -616,16 +700,28 @@ public class ProcessingOrderEditHandler(
 				return new HandlerResult { Success = true };
 			}
 
-			// Set Finished and record who finished
-			order.UpdateStatus(OrderStatus.Finished);
-			order.FinishedEmployeeId = employee.Id;
+			try
+			{
+                if (!(await CheckAndSetLock(orderId, chatId, cancellationToken)))
+                {
+                    return new HandlerResult { Success = true };
+                }
 
-			await repositoryManager.SaveAsync(cancellationToken);
+                // Set Finished and record who finished
+                order.UpdateStatus(OrderStatus.Finished);
+				order.FinishedEmployeeId = employee.Id;
+
+				await repositoryManager.SaveAsync(cancellationToken);
+			}
+			finally
+			{
+				await repositoryManager.OrderRepository.UnLockItem(orderId);
+			}
+
 
 			// Invalidate cached pages so this order disappears from processing list
 			freeOrdersCache.Invalidate(chatId);
-			await repositoryManager.OrderRepository.UnLockItem(orderId);
-			await telegramBotAnswerService.SendMessageAsync(chatId, "Заявка переведена в статус «Finished».", cancellationToken);
+			await telegramBotAnswerService.SendMessageAsync(chatId, "Заявка переведена в статус «Завершена».", cancellationToken);
 		}
 
 		return new HandlerResult { Success = true };
@@ -677,6 +773,118 @@ public class ProcessingOrderEditHandler(
 		}
 
 		return Task.CompletedTask;
+	}
+
+	private async Task<HandlerResult> HandleCommentCallbackAsync(TelegramUpdate update, CancellationToken cancellationToken)
+	{
+		// processing_orders:comment:{orderId}
+		var parts = update.CallbackQuery!.Data.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+		if (parts.Length == 3 && int.TryParse(parts[2], out var orderId))
+		{
+			var chatId = update.CallbackQuery!.From!.ChatId;
+			
+			userSessionCache.Set(new EditOrderSession
+			{
+				ChatId = chatId,
+				OrderId = orderId,
+				Step = EditStep.AwaitingComment,
+				LastUpdatedAt = DateTimeOffset.Now
+			}, TimeSpan.FromMinutes(30));
+
+			await telegramBotAnswerService.SendMessageAsync(chatId, "Введите комментарий для заявки. Он будет добавлен к существующему описанию:", cancellationToken);
+			return new HandlerResult { Success = true };
+		}
+
+		return new HandlerResult { Success = true };
+	}
+
+	private async Task<HandlerResult> HandlePaymentTypeCallbackAsync(TelegramUpdate update, CancellationToken cancellationToken)
+	{
+		// processing_orders:payment_type:{orderId}
+		var parts = update.CallbackQuery!.Data.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+		if (parts.Length == 3 && int.TryParse(parts[2], out var orderId))
+		{
+			var chatId = update.CallbackQuery!.From!.ChatId;
+			var order = await repositoryManager.OrderRepository
+				.FindByCondition(o => o.Id == orderId, false)
+				.SingleOrDefaultAsync(cancellationToken);
+
+			if (order == null)
+			{
+				await telegramBotAnswerService.SendMessageAsync(chatId, "Заявка не найдена.", cancellationToken);
+				return new HandlerResult { Success = true };
+			}
+
+			var buttons = new List<Button>();
+			var paymentTypes = Enum.GetValues<PaymentType>().Where(pt => pt != PaymentType.None).ToList();
+
+			foreach (var paymentType in paymentTypes)
+			{
+				var description = EnumsToStringConverter.GetPaymentTypeDescription(paymentType);
+				var isCurrent = order.PaymentType == paymentType;
+				var prefix = isCurrent ? "✅" : "";
+				buttons.Add(new Button
+				{
+					Text = $"{prefix}{description}",
+					CallbackData = $"{CallbackRoot}:set_payment_type:{orderId}:{(int)paymentType}"
+				});
+			}
+
+			await telegramBotAnswerService.SendMessageAsync(chatId, "Выберите тип оплаты:", buttons, cancellationToken);
+			return new HandlerResult { Success = true };
+		}
+
+		return new HandlerResult { Success = true };
+	}
+
+	private async Task<HandlerResult> HandleSetPaymentTypeAsync(TelegramUpdate update, CancellationToken cancellationToken)
+	{
+		// processing_orders:set_payment_type:{orderId}:{paymentType}
+		var parts = update.CallbackQuery!.Data.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+		if (parts.Length == 4 && int.TryParse(parts[2], out var orderId) && int.TryParse(parts[3], out var paymentTypeInt))
+		{
+			var chatId = update.CallbackQuery!.From!.ChatId;
+
+			if (!Enum.IsDefined(typeof(PaymentType), paymentTypeInt))
+			{
+				await telegramBotAnswerService.SendMessageAsync(chatId, "Неверный тип оплаты.", cancellationToken);
+				return new HandlerResult { Success = true };
+			}
+			
+			if (!(await CheckAndSetLock(orderId, chatId, cancellationToken)))
+			{
+				return new HandlerResult { Success = true };
+			}
+
+			try
+			{
+				var paymentType = (PaymentType)paymentTypeInt;
+				var order = await repositoryManager.OrderRepository
+					.FindByCondition(o => o.Id == orderId, true)
+					.SingleOrDefaultAsync(cancellationToken);
+
+				if (order == null)
+				{
+					await telegramBotAnswerService.SendMessageAsync(chatId, "Заявка не найдена.", cancellationToken);
+					return new HandlerResult { Success = true };
+				}
+
+				order.PaymentType = paymentType;
+				await repositoryManager.SaveAsync(cancellationToken);
+
+				freeOrdersCache.Invalidate(chatId);
+
+				var description = EnumsToStringConverter.GetPaymentTypeDescription(paymentType);
+				await telegramBotAnswerService.SendMessageAsync(chatId, $"Тип оплаты изменен на: {description}", cancellationToken);
+				return new HandlerResult { Success = true };
+			}
+			finally
+			{
+                await repositoryManager.OrderRepository.UnLockItem(orderId);
+			}
+		}
+
+		return new HandlerResult { Success = true };
 	}
 }
 

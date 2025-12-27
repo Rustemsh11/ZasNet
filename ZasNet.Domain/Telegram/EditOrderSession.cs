@@ -6,7 +6,8 @@ public enum EditStep
 	SelectingService = 1,
 	AwaitingPrice = 2,
 	AwaitingVolume = 3,
-	PhotoUploading = 4
+	PhotoUploading = 4,
+	AwaitingComment = 5
 }
 
 public class EditOrderSession
