@@ -5,7 +5,7 @@
 namespace ZasNet.Infrastruture.Migrations
 {
     /// <inheritdoc />
-    public partial class AddedDispetcher : Migration
+    public partial class FixDateConverter : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

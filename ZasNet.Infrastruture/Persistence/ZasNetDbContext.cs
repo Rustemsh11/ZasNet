@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ZasNet.Domain.Entities;
 using ZasNet.Infrastruture.Persistence.Configurations;
 
@@ -26,7 +27,30 @@ public class ZasNetDbContext: DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        
+        // Автоматическая конвертация всех DateTime в UTC при сохранении и обратно в Local при чтении
+        var dateTimeConverter = new ValueConverter<DateTime, DateTime>(
+            v => v.Kind == DateTimeKind.Utc ? v : v.ToUniversalTime(),
+            v => v.ToLocalTime());
+
+        var nullableDateTimeConverter = new ValueConverter<DateTime?, DateTime?>(
+            v => v.HasValue ? (v.Value.Kind == DateTimeKind.Utc ? v.Value : v.Value.ToUniversalTime()) : null,
+            v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Local) : null);
+
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            foreach (var property in entityType.GetProperties())
+            {
+                if (property.ClrType == typeof(DateTime))
+                {
+                    property.SetValueConverter(dateTimeConverter);
+                }
+                else if (property.ClrType == typeof(DateTime?))
+                {
+                    property.SetValueConverter(nullableDateTimeConverter);
+                }
+            }
+        }
+
         var entityTypes = modelBuilder.Model.GetEntityTypes().Where(c=> typeof(BaseItem).IsAssignableFrom(c.ClrType)); // reconize what it is mean
 
         foreach (var entityType in entityTypes)

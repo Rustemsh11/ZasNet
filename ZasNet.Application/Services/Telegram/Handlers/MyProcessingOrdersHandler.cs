@@ -128,7 +128,14 @@ public class MyProcessingOrdersHandler(
 							}
 							else
 							{
-								serviesText.AppendLine($"		✅ {serviceEmployees[k].Employee.Name}");
+								if (serviceEmployees[k].IsApproved)
+								{
+									serviesText.AppendLine($"		✅ {serviceEmployees[k].Employee.Name}");
+								}
+								else
+								{
+                                    serviesText.AppendLine($"		❓ {serviceEmployees[k].Employee.Name}");
+                                }
 							}
 						}
 					}

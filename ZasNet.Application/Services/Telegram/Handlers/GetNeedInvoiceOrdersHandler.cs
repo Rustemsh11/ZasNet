@@ -137,11 +137,13 @@ public class GetNeedInvoiceOrdersHandler(
 			foreach (var order in orders)
 			{
 				var servicesSb = new StringBuilder();
-				for (int i = 0; i < order.OrderServices.Count; i++)
+				for (int i = 0; i < order.OrderServices.Count; i++) 
 				{
 					var service = order.OrderServices.ElementAt(i);
-					servicesSb.AppendLine($"	🔧 Услуга {i + 1}: {service.Service.Name}");
+					var almazPrefix = service.IsAlmazService == true ? "(На счет Алмаза)": string.Empty;
+                    servicesSb.AppendLine($"	🔧 Услуга {i + 1}: {service.Service.Name} {almazPrefix}");
 					servicesSb.AppendLine($"		💵 Цена: {service.Price:0.##}");
+					servicesSb.AppendLine($"		📦 Объем: {service.TotalVolume:0.##}");
 					servicesSb.AppendLine("━━━━━━━━━━━━━━━━━━━━");
 				}
 
@@ -162,7 +164,7 @@ public class GetNeedInvoiceOrdersHandler(
 					buttons.Add(new Button
 					{
 						Text = "📄 Акт выполненных работ",
-						Url = $"https://h8742i-176-59-120-141.ru.tuna.am/api/v1/Document/Download?id={actDoc.Id}"
+						Url = $"https://aanmx4-176-52-55-138.ru.tuna.am/api/v1/Document/Download?id={actDoc.Id}"
 					});
 				}
 

@@ -1,17 +1,11 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json.Linq;
-using System;
 using System.Text;
 using Telegram.Bot;
-using Telegram.Bot.Types.Payments;
 using ZasNet.Application;
 using ZasNet.Application.Repository;
 using ZasNet.Application.Services;
@@ -33,7 +27,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<ZasNetDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("sqlConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("sqlConnection")));
 
 builder.Services.AddScoped<IRepositoryManager, RepositoryManager>();
 builder.Services.AddMediatR(cfg =>
