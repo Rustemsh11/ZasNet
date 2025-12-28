@@ -6,6 +6,7 @@ using ZasNet.Domain.Entities;
 using static ZasNet.Domain.Entities.EmployeeEarinig;
 using static ZasNet.Domain.Entities.Order;
 using static ZasNet.Domain.Entities.DispetcherEarning;
+using ZasNet.Domain;
 
 namespace ZasNet.Application.UseCases.Commands.Orders.CreateOrder;
 
@@ -39,6 +40,11 @@ public class CreateOrderHandler(
                     })
                     .ToList(),
             };
+
+            if(orderService.OrderServiceEmployees.Count == 0)
+            {
+                throw new ArgumentException($"Необходимо добавить сотрудникоа для услуг. Если сотрудник неизвестный, то выберите 'Не известно'");
+            }
 
             var createEmployeeEarningDto = new CreateEmployeeEarningDto()
             {
@@ -104,15 +110,23 @@ public class CreateOrderHandler(
 				.Include(o => o.OrderServices).ThenInclude(os => os.OrderServiceCars).ThenInclude(osc => osc.Car).ThenInclude(c => c.CarModel)
 				.SingleAsync(cancellationToken);
 
-			var chatIds = repositoryManager.EmployeeRepository
-				.FindByCondition(e => assignedEmployeeIds.Contains(e.Id) && e.ChatId != null, false)
-				.Select(e => e.ChatId!.Value)
+			var employeeChatIds = repositoryManager.EmployeeRepository
+				.FindByCondition(e => e.ChatId != null, false)
+				.Select(e => new { id = e.Id, chatId = e.ChatId!.Value })
 				.Distinct()
 				.ToList();
 
-			foreach (var chatId in chatIds)
+			foreach (var employeeChatId in employeeChatIds)
 			{
-				await orderNotificationService.NotifyOrderCreatedAsync(order, chatId, cancellationToken);
+                if (assignedEmployeeIds.Contains(employeeChatId.id))
+                {
+				    await orderNotificationService.NotifyOrderCreatedAsync(order, employeeChatId.chatId, cancellationToken);
+                }
+                else if(assignedEmployeeIds.Contains(Constants.UnknowingEmployeeId))
+                {
+                    
+                    await orderNotificationService.NotifyOrderCreatedAsync(employeeChatId.chatId, cancellationToken);
+                }
 			}
 		}
     }

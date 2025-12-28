@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using Microsoft.Extensions.Logging;
+using System.Text;
 using ZasNet.Domain;
 using ZasNet.Domain.Entities;
 using ZasNet.Domain.Enums;
@@ -7,7 +8,7 @@ using ZasNet.Domain.Telegram;
 
 namespace ZasNet.Application.Services.Telegram;
 
-public class OrderNotificationService(ITelegramBotAnswerService telegramBotAnswer) : IOrderNotificationService
+public class OrderNotificationService(ITelegramBotAnswerService telegramBotAnswer, ILoggerManager logger) : IOrderNotificationService
 {
     public async Task NotifyOrderCreatedAsync(Order order, long chatId, CancellationToken cancellationToken)
     {
@@ -94,8 +95,13 @@ public class OrderNotificationService(ITelegramBotAnswerService telegramBotAnswe
         }
         catch (Exception ex)
         {
-            //_logger.LogError(ex, "Failed to send Telegram notification for order {OrderId}", order.Id);
+            logger.LogError($"Failed to send Telegram notification for order {order.Id}. Ex: {ex.Message}");
         }
+    }
+
+    public async Task NotifyOrderCreatedAsync(long chatId, CancellationToken cancellationToken)
+    {
+        await telegramBotAnswer.SendMessageAsync(chatId, "Появилась новая заявка", cancellationToken);
     }
 }
 

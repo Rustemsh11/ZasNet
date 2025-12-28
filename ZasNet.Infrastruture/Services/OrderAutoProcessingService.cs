@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ZasNet.Application.Repository;
+using ZasNet.Application.Services;
 using ZasNet.Application.Services.Telegram;
 using ZasNet.Domain.Enums;
 using ZasNet.Domain.Telegram;
@@ -12,10 +13,10 @@ namespace ZasNet.Infrastruture.Services;
 public class OrderAutoProcessingService : BackgroundService
 {
 	private readonly IServiceScopeFactory serviceScopeFactory;
-	private readonly ILogger<OrderAutoProcessingService> logger;
+	private readonly ILoggerManager logger;
 	private readonly ITelegramBotAnswerService telegramBotAnswer;
 
-	public OrderAutoProcessingService(IServiceScopeFactory serviceScopeFactory, ILogger<OrderAutoProcessingService> logger, ITelegramBotAnswerService telegramBotAnswerService)
+	public OrderAutoProcessingService(IServiceScopeFactory serviceScopeFactory, ILoggerManager logger, ITelegramBotAnswerService telegramBotAnswerService)
 	{
 		this.serviceScopeFactory = serviceScopeFactory;
 		this.logger = logger;
@@ -24,7 +25,7 @@ public class OrderAutoProcessingService : BackgroundService
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 	{
-		logger.LogInformation("Order auto-processing service started");
+		logger.LogInfo("Order auto-processing service started");
 
 		while (!stoppingToken.IsCancellationRequested)
 		{
@@ -38,7 +39,7 @@ public class OrderAutoProcessingService : BackgroundService
 			}
 			catch (Exception ex)
 			{
-				logger.LogError(ex, "Error while processing due orders");
+				logger.LogError($"Error while processing due orders. Ex: {ex.Message}");
 			}
 
 			try
@@ -51,7 +52,7 @@ public class OrderAutoProcessingService : BackgroundService
 			}
 		}
 
-		logger.LogInformation("Order auto-processing service stopped");
+		logger.LogInfo("Order auto-processing service stopped");
 	}
 
 	private async Task ProcessDueOrders(CancellationToken cancellationToken)
@@ -89,7 +90,7 @@ public class OrderAutoProcessingService : BackgroundService
 
 		await repositoryManager.SaveAsync(cancellationToken);
 
-		logger.LogInformation("Auto-switched {Count} order(s) to Processing", dueOrders.Count);
+		logger.LogInfo($"Auto-switched {dueOrders.Count} order(s) to Processing");
 	}
 }
 

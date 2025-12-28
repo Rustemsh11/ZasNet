@@ -8,4 +8,9 @@ public class NoOpOrderNotificationService : IOrderNotificationService
     {
         return Task.CompletedTask;
     }
+
+    public Task NotifyOrderCreatedAsync(long chatId, CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
+    }
 }

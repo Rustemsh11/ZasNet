@@ -1,18 +1,19 @@
 using System.Net;
 using System.Text.Json;
 using FluentValidation;
+using ZasNet.Application.Services;
 
 namespace ZasNet.WebApi.Middleware;
 
 public class GlobalExceptionHandlerMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly ILogger<GlobalExceptionHandlerMiddleware> _logger;
+    private readonly ILoggerManager _logger;
     private readonly IWebHostEnvironment _environment;
 
     public GlobalExceptionHandlerMiddleware(
         RequestDelegate next,
-        ILogger<GlobalExceptionHandlerMiddleware> logger,
+        ILoggerManager logger,
         IWebHostEnvironment environment)
     {
         _next = next;
@@ -28,7 +29,7 @@ public class GlobalExceptionHandlerMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An unhandled exception occurred");
+            _logger.LogError($"An unhandled exception occurred. Ex: {ex.Message}");
             await HandleExceptionAsync(context, ex);
         }
     }

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using NLog;
 using System.Text;
 using Telegram.Bot;
 using ZasNet.Application;
@@ -20,6 +21,8 @@ using ZasNet.Infrastruture.Services.Telegram;
 using ZasNet.WebApi.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
+
+LogManager.LoadConfiguration(string.Concat(Directory.GetCurrentDirectory(), "/nlog.config"));
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -53,6 +56,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                        new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authSettings.secretKey))
                };
            });
+builder.Services.AddSingleton<ILoggerManager, LoggerManager>();
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<IPasswordHashService, PasswordHashService>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
