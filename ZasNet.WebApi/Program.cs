@@ -17,6 +17,7 @@ using ZasNet.Infrastruture.Persistence;
 using ZasNet.Infrastruture.Repositories;
 using ZasNet.Infrastruture.Services;
 using ZasNet.Infrastruture.Services.Telegram;
+using ZasNet.WebApi.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -130,6 +131,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// Глобальная обработка исключений - должна быть первой в цепочке middleware
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+
 app.UseCors();
 app.UseForwardedHeaders();
 //app.UseHttpsRedirection(); enable on deploying!!!

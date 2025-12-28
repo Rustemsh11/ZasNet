@@ -24,7 +24,7 @@ public class CreateEmployeeHandler(IRepositoryManager repositoryManager,
         }
         
         var buch = await employeeRepo.FindByCondition(c => c.RoleId == Constants.GeneralLedgerRole, false).CountAsync(cancellationToken);
-        if(buch > 1)
+        if(buch > 0)
         {
             throw new InvalidOperationException("Бухгалтер может быть только 1, если это новый бухгалтер, сначало удалите прежднего бугалтера");
         }

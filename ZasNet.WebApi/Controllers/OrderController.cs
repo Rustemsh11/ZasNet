@@ -7,6 +7,7 @@ using ZasNet.Application.UseCases.Commands.Orders.ChangeOrderStatus;
 using ZasNet.Application.UseCases.Commands.Orders.ChangeOrderStatusToWaitingInvoice;
 using ZasNet.Application.UseCases.Commands.Orders.CreateOrder;
 using ZasNet.Application.UseCases.Commands.Orders.DeleteOrder;
+using ZasNet.Application.UseCases.Commands.Orders.LockOrder;
 using ZasNet.Application.UseCases.Commands.Orders.ResetLocks;
 using ZasNet.Application.UseCases.Commands.Orders.SaveOrder;
 using ZasNet.Application.UseCases.Queries.Orders.GetCreateOrderParameters;
@@ -86,5 +87,11 @@ public class OrderController(IMediator mediator): ControllerBase
     public async Task ResetLockedOrder([FromBody] ResetLocksCommand command, CancellationToken token)
     {
         await mediator.Send(command, token);
+    }
+
+    [HttpPost]
+    public async Task LockOrder([FromQuery] int orderId, CancellationToken token)
+    {
+        await mediator.Send(new LockOrderCommand(orderId), token);
     }
 }
