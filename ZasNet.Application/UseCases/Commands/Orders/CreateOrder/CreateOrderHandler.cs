@@ -111,7 +111,7 @@ public class CreateOrderHandler(
 				.SingleAsync(cancellationToken);
 
 			var employeeChatIds = repositoryManager.EmployeeRepository
-				.FindByCondition(e => e.ChatId != null, false)
+				.FindByCondition(e => e.ChatId != null && e.RoleId != Constants.GeneralLedgerRole, false)
 				.Select(e => new { id = e.Id, chatId = e.ChatId!.Value })
 				.Distinct()
 				.ToList();
@@ -124,7 +124,6 @@ public class CreateOrderHandler(
                 }
                 else if(assignedEmployeeIds.Contains(Constants.UnknowingEmployeeId))
                 {
-                    
                     await orderNotificationService.NotifyOrderCreatedAsync(employeeChatId.chatId, cancellationToken);
                 }
 			}
