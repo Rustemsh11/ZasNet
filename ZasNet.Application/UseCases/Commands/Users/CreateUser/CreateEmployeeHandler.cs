@@ -23,11 +23,15 @@ public class CreateEmployeeHandler(IRepositoryManager repositoryManager,
             throw new InvalidOperationException("Сотрудник с таким логином уже существует, выберите другой логин");
         }
         
-        var buch = await employeeRepo.FindByCondition(c => c.RoleId == Constants.GeneralLedgerRole, false).CountAsync(cancellationToken);
-        if(buch > 0)
+        if(role.Id == Constants.GeneralLedgerRole)
         {
-            throw new InvalidOperationException("Бухгалтер может быть только 1, если это новый бухгалтер, сначало удалите прежднего бугалтера");
+            var buch = await employeeRepo.FindByCondition(c => c.RoleId == Constants.GeneralLedgerRole, false).CountAsync(cancellationToken);
+            if(buch > 0)
+            {
+                throw new InvalidOperationException("Бухгалтер может быть только 1, если это новый бухгалтер, сначало удалите прежднего бугалтера");
+            }
         }
+
 
         var user = Employee.CreateEmployee(request.Name, request.Phone, request.Login, passwordHashService.HashPassword(request.Password), request.DispetcherProcent, role);
 

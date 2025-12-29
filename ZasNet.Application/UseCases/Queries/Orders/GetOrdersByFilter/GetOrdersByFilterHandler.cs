@@ -108,6 +108,15 @@ public class GetOrdersByFilterHandler(
             });
         }
 
+        // Фильтр по водителям, выполнявшим заявку
+        if (request.ExecutedEmployeeIds != null && request.ExecutedEmployeeIds.Any())
+        {
+            filters.Add(new ExecutedEmployeeFilter
+            {
+                EmployeeIds = request.ExecutedEmployeeIds
+            });
+        }
+
         return filters;
     }
 }

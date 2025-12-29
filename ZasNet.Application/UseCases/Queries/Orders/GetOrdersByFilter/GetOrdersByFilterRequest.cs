@@ -42,5 +42,10 @@ public class GetOrdersByFilterRequest : IRequest<List<GetOrdersByFilterResponse>
     /// Список ID сотрудников, создавших заявку
     /// </summary>
     public List<int>? CreatedEmployeeIds { get; set; }
+
+    /// <summary>
+    /// Список ID водителей, выполнявших заявку
+    /// </summary>
+    public List<int>? ExecutedEmployeeIds { get; set; }
 }
 

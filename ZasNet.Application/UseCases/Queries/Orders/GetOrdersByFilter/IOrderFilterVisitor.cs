@@ -13,5 +13,6 @@ public interface IOrderFilterVisitor
     IQueryable<Order> Visit(PaymentTypeFilter filter, IQueryable<Order> query);
     IQueryable<Order> Visit(ServiceFilter filter, IQueryable<Order> query);
     IQueryable<Order> Visit(CreatedEmployeeFilter filter, IQueryable<Order> query);
+    IQueryable<Order> Visit(ExecutedEmployeeFilter filter, IQueryable<Order> query);
 }
 

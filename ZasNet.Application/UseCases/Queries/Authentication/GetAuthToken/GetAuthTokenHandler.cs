@@ -19,7 +19,9 @@ public class GetAuthTokenHandler(IRepositoryManager repositoryManager,
         {
             throw new InvalidOperationException("Пароль не верный. Попробуйте еще раз");
         }
-        var employeeDto = new EmployeeDto() { Id = user.Id, Name = await repositoryManager.EmployeeRepository.FindByCondition(c => c.Id == user.Id, false).Select(c => c.Name).SingleAsync(cancellationToken) };
+
+        var emoployee = await repositoryManager.EmployeeRepository.FindByCondition(c => c.Id == user.Id, false).Include(c=>c.Role).SingleOrDefaultAsync(cancellationToken);
+        var employeeDto = new EmployeeDto() { Id = user.Id, Name = emoployee.Name, Role = new RoleDto() { Id = emoployee.RoleId, Name = emoployee.Role.Name } };
         var (expires, token) = jwtTokenGenerator.Generate(employeeDto, user.Login, user.Role.Name);
 
         return new AccessTokenDto() { Token = token, ExpiredTime = expires, User = employeeDto };

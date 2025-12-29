@@ -72,5 +72,16 @@ public class OrderFilterVisitor : IOrderFilterVisitor
 
         return query;
     }
+
+    public IQueryable<Order> Visit(ExecutedEmployeeFilter filter, IQueryable<Order> query)
+    {
+        if (filter.EmployeeIds != null && filter.EmployeeIds.Any())
+        {
+            query = query.Where(o => o.OrderServices.Any(os => 
+                os.OrderServiceEmployees.Any(ose => filter.EmployeeIds.Contains(ose.EmployeeId))));
+        }
+
+        return query;
+    }
 }
 
