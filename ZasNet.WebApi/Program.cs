@@ -29,6 +29,7 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Configuration.AddEnvironmentVariables();
 
 builder.Services.AddDbContext<ZasNetDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("sqlConnection")));
@@ -127,7 +128,10 @@ builder.Services.AddCors(opt =>
 // Background services
 builder.Services.AddHostedService<OrderAutoProcessingService>();
 builder.Services.AddHttpContextAccessor();
+
+
 var app = builder.Build();
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -139,11 +143,16 @@ if (app.Environment.IsDevelopment())
 // Глобальная обработка исключений - должна быть первой в цепочке middleware
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
+app.MigrateDatabase();
 app.UseCors();
 app.UseForwardedHeaders();
 //app.UseHttpsRedirection(); enable on deploying!!!
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Health check endpoint
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
+
 app.MapControllers();
 
 app.Run();

@@ -1,0 +1,71 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: zasnet-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ZasNet
+      POSTGRES_USER: zasnet
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - zasnet-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zasnet -d ZasNet"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ZasNet Web API
+  api:
+    build:
+      context: .
+      dockerfile: ZasNet.WebApi/Dockerfile
+    container_name: zasnet-api
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5142
+      - ConnectionStrings__sqlConnection=host=postgres;Port=5432;Database=ZasNet;Username=zasnet;Password=${POSTGRES_PASSWORD}
+      - AuthSettings__secretKey=${JWT_SECRET_KEY}
+      - TelegramSettings__BotToken=${TELEGRAM_BOT_TOKEN}
+      - TelegramSettings__ChannelId=${TELEGRAM_CHANNEL_ID}
+      - TelegramSettings__WebhookSecret=${TELEGRAM_WEBHOOK_SECRET}
+    ports:
+      - "5142:5142"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - zasnet-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5142/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ZasNet Web Client (Blazor WebAssembly)
+  webclient:
+    build:
+      context: ../ZasNetWebClient/ZasNetWebClient
+      dockerfile: Dockerfile
+    container_name: zasnet-webclient
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+    networks:
+      - zasnet-network
+
+
+networks:
+  zasnet-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+    driver: local

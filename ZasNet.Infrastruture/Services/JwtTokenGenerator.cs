@@ -23,7 +23,7 @@ public class JwtTokenGenerator(IOptions<AuthSettings> authSettings) : IJwtTokenG
                         };
         var tokeOptions = new JwtSecurityToken(
             claims: claimsList,
-            expires: DateTime.Now.AddHours(12),
+            expires: DateTime.Now.AddDays(7),
             signingCredentials: signinCredentials);
 
         var tokenString = new JwtSecurityTokenHandler().WriteToken(tokeOptions);
