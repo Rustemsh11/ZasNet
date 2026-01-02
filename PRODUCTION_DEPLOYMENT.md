@@ -222,7 +222,7 @@ events {
 http {
     server {
         listen 80;
-        server_name yourdomain.com www.yourdomain.com;
+        server_name zasnet.ru zasnet.ru;
 
         location /.well-known/acme-challenge/ {
             root /var/www/certbot;
